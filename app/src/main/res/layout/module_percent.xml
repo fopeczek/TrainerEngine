@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             tools:context=".modules.PercentModule.PercentModule">
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <TextView
+                android:text="50%"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:id="@+id/PercentQuestion"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textSize="34sp" app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+        <SeekBar
+                android:layout_width="286dp"
+                android:layout_height="35dp" android:id="@+id/PercentAnswer"
+                app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toBottomOf="@+id/PercentQuestion"
+                android:max="100" android:progress="50"
+                app:layout_constraintVertical_bias="0.20999998"/>
+        <ProgressBar
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:id="@+id/PercentPreview"
+                app:layout_constraintStart_toStartOf="@+id/PercentAnswer"
+                app:layout_constraintTop_toTopOf="@+id/PercentAnswer"
+                app:layout_constraintEnd_toEndOf="@+id/PercentAnswer"
+                app:layout_constraintBottom_toBottomOf="@+id/PercentAnswer" android:paddingStart="15dp"
+                android:paddingEnd="15dp" android:visibility="invisible"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

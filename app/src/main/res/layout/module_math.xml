@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             tools:context=".modules.MathModule.MathModule">
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <TextView
+                android:text="2+2="
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:id="@+id/MathQuestion"
+                app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintHorizontal_bias="0.382"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large" android:textSize="34sp"/>
+        <EditText
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:inputType="numberSigned|number"
+                android:ems="10"
+                android:id="@+id/MathAnswer"
+                app:layout_constraintStart_toEndOf="@+id/MathQuestion"
+                app:layout_constraintTop_toTopOf="@+id/MathQuestion"
+                app:layout_constraintBottom_toBottomOf="@+id/MathQuestion"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large" android:textSize="34sp"
+                android:singleLine="true" android:textAlignment="textStart" android:numeric="signed"
+                android:maxLength="4"/>
+        <TextView
+                android:layout_width="100dp"
+                android:layout_height="66dp" android:id="@+id/MathPreview"
+                app:layout_constraintBottom_toBottomOf="@+id/MathQuestion"
+                app:layout_constraintTop_toTopOf="@+id/MathQuestion"
+                app:layout_constraintStart_toEndOf="@+id/MathQuestion"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large" android:textSize="34sp"
+                android:textAlignment="textStart" android:gravity="center" android:paddingStart="3.5dp"
+                android:visibility="invisible"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

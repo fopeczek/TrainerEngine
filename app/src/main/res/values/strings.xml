@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Trainer</string>
+    <string name="nav_single_module">Single Module</string>
+    <string name="nav_multi_module">Multiple Modules</string>
+    <string name="nav_settings">Settings</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="tab_text_1">Tab 1</string>
+    <string name="tab_text_2">Tab 2</string>
+</resources>
