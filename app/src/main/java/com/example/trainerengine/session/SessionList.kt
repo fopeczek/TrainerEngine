@@ -15,7 +15,6 @@ import com.example.trainerengine.R
 import com.example.trainerengine.SQL.GlobalSQLiteManager
 import com.example.trainerengine.SQL.SQLiteHelper
 import com.example.trainerengine.Session
-import com.example.trainerengine.modules
 import com.example.trainerengine.modules.MathModule.MathModuleStub
 import com.example.trainerengine.modules.PercentModule.PercentModuleStub
 import com.example.trainerengine.modules.PythonMathModule.PythonMathModuleStub
@@ -39,11 +38,6 @@ class SessionList : AppCompatActivity() {
 
         sqLiteHelper = SQLiteHelper(applicationContext)
         database = GlobalSQLiteManager(sqLiteHelper)
-
-        //load modules
-        modules.add(MathModuleStub().createModule(database.getNewModuleID()))
-        modules.add(PythonMathModuleStub().createModule(database.getNewModuleID()))
-        modules.add(PercentModuleStub().createModule(database.getNewModuleID()))
 
         val newSession = findViewById<FloatingActionButton>(R.id.addSession)
         newSession.setOnClickListener {

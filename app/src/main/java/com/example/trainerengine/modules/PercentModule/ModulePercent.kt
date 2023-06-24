@@ -12,7 +12,7 @@ import com.example.trainerengine.module.*
 import java.lang.Math.*
 import kotlin.math.ln
 
-class PercentModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
+class PercentModule(stub: ModuleStub) : Module(stub,
     { module, question, answers, taskID, attempt -> PercentTask(module, question, answers, taskID, attempt) },
     { attempt, id, userAnswer, judgement -> PercentAttempt(attempt, id, userAnswer, judgement) },
     { text -> PercentQuestion(text) },
@@ -104,8 +104,8 @@ class PercentModuleStub : ModuleStub() {
     override val supportsMultipleAttempts: Boolean = false
     override val extraAnswerTable: Boolean = false
 
-    override fun createModule(moduleID: Int): Module {
-        return PercentModule(moduleID, this)
+    override fun createModule(): Module {
+        return PercentModule(this)
     }
 
     override fun getSkillSet(): SkillSet {

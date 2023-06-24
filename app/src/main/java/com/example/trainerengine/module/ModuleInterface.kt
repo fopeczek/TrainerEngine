@@ -9,7 +9,6 @@ enum class TaskState {
 }
 
 abstract class Module(
-    protected val moduleID: Int,
     private val stub: ModuleStub,
     val taskFactory: (Module, TaskQuestion, List<TaskAnswer>, Int, Triple<Int, Any, Boolean>?) -> ModuleTask,
     val attemptFactory: (ModuleTask, Int?, Any?, Boolean?) -> TaskAttempt,
@@ -19,17 +18,6 @@ abstract class Module(
     val judgmentFactory: (TaskAttempt, Boolean?) -> TaskJudgment,
     val fragmentFactory: (ModuleTask) -> TaskFragment
 ) {
-    fun getSettings(): List<Triple<String, String, Any>>{
-        val settings = mutableListOf<Triple<String, String, Any>>()
-        val toml=Toml().read(File("config.toml"))
-        toml.getList<Toml>("settings")
-        return settings
-    }
-
-    fun getModuleID(): Int {
-        return moduleID
-    }
-
     fun getStub(): ModuleStub {
         return stub
     }
@@ -247,7 +235,7 @@ abstract class ModuleStub {
     abstract val supportsMultipleAttempts: Boolean
     abstract val extraAnswerTable: Boolean
 
-    abstract fun createModule(moduleID: Int): Module
+    abstract fun createModule(): Module
 
     abstract fun getSkillSet(): SkillSet
 }

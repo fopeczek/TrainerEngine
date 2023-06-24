@@ -11,7 +11,7 @@ import com.chaquo.python.Python
 import com.example.trainerengine.R
 import com.example.trainerengine.module.*
 
-class PythonMathModule(moduleID:Int, stub: ModuleStub) : Module(moduleID, stub,
+class PythonMathModule(stub: ModuleStub) : Module(stub,
     { module, question, answers, taskID, attempt -> PythonMathTask(module, question, answers, taskID, attempt) },
     { attempt, id, userAnswer, judgement -> PythonMathAttempt(attempt, id, userAnswer, judgement) },
     { text -> PythonMathQuestion(text) },
@@ -113,8 +113,8 @@ class PythonMathModuleStub : ModuleStub() {
     override val supportsMultipleAttempts: Boolean = false
     override val extraAnswerTable: Boolean = false
 
-    override fun createModule(moduleID: Int): Module {
-        return PythonMathModule(moduleID, this)
+    override fun createModule(): Module {
+        return PythonMathModule(this)
     }
 
     override fun getSkillSet(): SkillSet {

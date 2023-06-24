@@ -37,7 +37,17 @@ class Session(
         val serializedModules = (serializedSession[GlobalSQLiteManager.modules] as String).split(",")
         for (serializedModule in serializedModules) {
             when (serializedModule) {
-                for
+                MathModuleStub().databaseName -> {
+                    modules.add(MathModuleStub().createModule())
+                }
+
+                PercentModuleStub().databaseName -> {
+                    modules.add(PercentModuleStub().createModule())
+                }
+
+                PythonMathModuleStub().databaseName -> {
+                    modules.add(PythonMathModuleStub().createModule())
+                }
             }
         }
         this.modules = modules

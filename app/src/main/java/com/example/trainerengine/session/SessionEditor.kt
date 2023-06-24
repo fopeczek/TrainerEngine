@@ -14,7 +14,6 @@ import com.example.trainerengine.modules.*
 import com.example.trainerengine.Session
 import com.example.trainerengine.getTimestamp
 import com.example.trainerengine.module.ModuleEditor
-import com.example.trainerengine.modules
 import com.example.trainerengine.modules.MathModule.MathModuleStub
 import com.example.trainerengine.modules.PercentModule.PercentModuleStub
 import com.example.trainerengine.modules.PythonMathModule.PythonMathModuleStub
@@ -44,17 +43,15 @@ class SessionEditor : AppCompatActivity() {
         val repeatable = findViewById<CheckBox>(R.id.check_repeatable)
         val reset = findViewById<CheckBox>(R.id.check_reset)
 
-        for (module in modules){
-            val checkBox = CheckBox(this)
-            checkBox.text = module.getStub().descriptionName
-            checkBox.setOnLongClickListener {
-                val intent = Intent(this, ModuleEditor::class.java)
-                intent.putExtra(GlobalSQLiteManager.moduleID, module.getModuleID())
-                startActivity(intent)
-                true
-            }
-            moduleList.addView(checkBox)
-        }
+        var checkBox = CheckBox(this)
+        checkBox.text = MathModuleStub().descriptionName
+        moduleList.addView(checkBox)
+        checkBox = CheckBox(this)
+        checkBox.text = PercentModuleStub().descriptionName
+        moduleList.addView(checkBox)
+        checkBox = CheckBox(this)
+        checkBox.text = PythonMathModuleStub().descriptionName
+        moduleList.addView(checkBox)
 
         if (newSession) {
             sessionId = database.getNewSessionID()
@@ -69,7 +66,7 @@ class SessionEditor : AppCompatActivity() {
 
             for (module in session.getModules()) {
                 for (i in 0 until moduleList.childCount) {
-                    val checkBox = moduleList.getChildAt(i) as CheckBox
+                    checkBox = moduleList.getChildAt(i) as CheckBox
                     if (checkBox.text == module.getStub().descriptionName) {
                         checkBox.isChecked = true
                     }
