@@ -10,11 +10,10 @@ import android.widget.LinearLayout
 import com.example.trainerengine.R
 import com.example.trainerengine.SQL.GlobalSQLiteManager
 import com.example.trainerengine.SQL.SQLiteHelper
-import com.example.trainerengine.modules.*
 import com.example.trainerengine.Session
 import com.example.trainerengine.getTimestamp
 import com.example.trainerengine.module.ModuleEditor
-import com.example.trainerengine.modules
+import com.example.trainerengine.globalModules
 import com.example.trainerengine.modules.MathModule.MathModuleStub
 import com.example.trainerengine.modules.PercentModule.PercentModuleStub
 import com.example.trainerengine.modules.PythonMathModule.PythonMathModuleStub
@@ -44,7 +43,7 @@ class SessionEditor : AppCompatActivity() {
         val repeatable = findViewById<CheckBox>(R.id.check_repeatable)
         val reset = findViewById<CheckBox>(R.id.check_reset)
 
-        for (module in modules){
+        for (module in globalModules){
             val checkBox = CheckBox(this)
             checkBox.text = module.getStub().descriptionName
             checkBox.setOnLongClickListener {
@@ -94,15 +93,15 @@ class SessionEditor : AppCompatActivity() {
             if (checkBox.isChecked) {
                 when (checkBox.text) {
                     MathModuleStub().descriptionName -> {
-                        modules.add(MathModuleStub().databaseName)
+                        modules.add(MathModuleStub().databasePrefix)
                     }
 
                     PercentModuleStub().descriptionName -> {
-                        modules.add(PercentModuleStub().databaseName)
+                        modules.add(PercentModuleStub().databasePrefix)
                     }
 
                     PythonMathModuleStub().descriptionName -> {
-                        modules.add(PythonMathModuleStub().databaseName)
+                        modules.add(PythonMathModuleStub().databasePrefix)
                     }
                 }
             }
@@ -126,7 +125,7 @@ class SessionEditor : AppCompatActivity() {
         val session: MutableMap<String, Any> = mutableMapOf()
         session[GlobalSQLiteManager.sessionID] = sessionId
         session[GlobalSQLiteManager.sessionName] = sessionName.text.toString()
-        session[GlobalSQLiteManager.modules] = modules.joinToString(",")
+        session[GlobalSQLiteManager.selectedModules] = modules.joinToString(",")
         session[GlobalSQLiteManager.repeatable] = repeatable.isChecked
         session[GlobalSQLiteManager.reset] = reset.isChecked
         session[GlobalSQLiteManager.penaltyPoints] = penalty.text.toString().toInt()

@@ -1,3 +1,5 @@
+multipleAnswers = false
+
 [[settings]]
 text = "Do division"
 type = "bool"

@@ -109,9 +109,7 @@ class PythonMathFragment(task: ModuleTask) : TaskFragment(task) {
 
 class PythonMathModuleStub : ModuleStub() {
     override val descriptionName: String = "Python Module"
-    override val databaseName: String = "Python"
-    override val supportsMultipleAttempts: Boolean = false
-    override val extraAnswerTable: Boolean = false
+    override val databasePrefix: String = "Python"
 
     override fun createModule(moduleID: Int): Module {
         return PythonMathModule(moduleID, this)

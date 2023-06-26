@@ -34,10 +34,30 @@ class Session(
         config.repeatable = serializedSession[GlobalSQLiteManager.repeatable].toString().toBoolean()
         answeredTaskAmount = database.getAmountOfAttemptedTasks(sessionID)
         val modules = mutableListOf<Module>()
-        val serializedModules = (serializedSession[GlobalSQLiteManager.modules] as String).split(",")
+        val serializedModules = (serializedSession[GlobalSQLiteManager.selectedModules] as String).split(",")
         for (serializedModule in serializedModules) {
             when (serializedModule) {
-                for
+                MathModuleStub().databasePrefix -> {
+                    for (module in globalModules) {
+                        if (module.getStub().databasePrefix == MathModuleStub().databasePrefix) {
+                            modules.add(module)
+                        }
+                    }
+                }
+                PercentModuleStub().databasePrefix -> {
+                    for (module in globalModules) {
+                        if (module.getStub().databasePrefix == PercentModuleStub().databasePrefix) {
+                            modules.add(module)
+                        }
+                    }
+                }
+                PythonMathModuleStub().databasePrefix -> {
+                    for (module in globalModules) {
+                        if (module.getStub().databasePrefix == PythonMathModuleStub().databasePrefix) {
+                            modules.add(module)
+                        }
+                    }
+                }
             }
         }
         this.modules = modules
@@ -72,7 +92,7 @@ class Session(
 //            GlobalSQLiteManager.timestamp to getTimestamp()
 //        )
 //    }
-    
+
     fun answerTask() {
         answeredTaskAmount++
     }

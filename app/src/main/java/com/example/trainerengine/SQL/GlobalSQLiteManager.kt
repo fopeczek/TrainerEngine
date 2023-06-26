@@ -13,7 +13,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         const val judgment = "Judgement"
         const val timestamp = "Timestamp"
         const val points = "Points"
-        const val modules = "Modules"
+        const val selectedModules = "SelectedModules"
         const val repeatable = "Repeatable"
         const val reset = "Reset"
         const val penaltyPoints = "PenaltyPoints"
@@ -23,6 +23,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
 
         const val sessionsTable = "Sessions"
         const val modulesTable = "Modules"
+        const val moduleConfigTable = "ModuleConfig"
         const val taskTable = "Tasks"
         const val attemptsTable = "Attempts"
         const val answersTable = "Answers"
@@ -30,7 +31,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
 
     init {
         initializeSessionsTable()
-        initializeModulesTable()
+        initializeModulesTables()
         initializeTasksTable()
         initializeAttemptsTable()
         initializeAnswersTable()
@@ -40,7 +41,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         val columns = mapOf(
             sessionID to ColumnType.INT,
             sessionName to ColumnType.TEXT,
-            modules to ColumnType.TEXT,
+            selectedModules to ColumnType.TEXT,
             points to ColumnType.INT,
             reset to ColumnType.BOOL,
             penaltyPoints to ColumnType.INT,
@@ -83,13 +84,22 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         return database.getNewID(sessionsTable, sessionID)
     }
 
-    private fun initializeModulesTable(){
+    private fun initializeModulesTables() {
+        //main modules table
         val columns = mapOf(
             moduleID to ColumnType.INT,
-            moduleName to ColumnType.TEXT,
+            moduleName to ColumnType.TEXT, //hash
             timestamp to ColumnType.TIMESTAMP
         )
         database.initializeTable(modulesTable, columns)
+    }
+
+    fun saveModule(values: Map<String, Any>): Int {
+        return database.insertRow(modulesTable, values)
+    }
+
+    fun getModules(): List<Map<String, Any>> {
+        return database.loadOrderedByTimestamp(modulesTable)
     }
 
     fun getNewModuleID(): Int {

@@ -111,11 +111,9 @@ class MathFragment(task: ModuleTask) : TaskFragment(task) {
 
 class MathModuleStub : ModuleStub() {
     override val descriptionName: String = "Math Module"
-    override val databaseName: String = "Math"
-    override val supportsMultipleAttempts: Boolean = false
-    override val extraAnswerTable: Boolean = false
+    override val databasePrefix: String = "Math"
 
-    override fun createModule(moduleID:Int): Module {
+    override fun createModule(moduleID: Int): Module {
         return MathModule(moduleID, this)
     }
 

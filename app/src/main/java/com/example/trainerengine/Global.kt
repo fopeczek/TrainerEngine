@@ -4,7 +4,7 @@ import android.icu.text.DateFormat
 import com.example.trainerengine.module.Module
 import java.util.*
 
-val modules = mutableListOf<Module>()
+val globalModules = mutableListOf<Module>()
 
 fun getTimestamp(): String {
     val dateFormat = DateFormat.getDateTimeInstance()

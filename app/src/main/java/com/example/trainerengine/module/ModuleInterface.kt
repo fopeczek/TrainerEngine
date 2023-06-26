@@ -9,7 +9,7 @@ enum class TaskState {
 }
 
 abstract class Module(
-    protected val moduleID: Int,
+    private val moduleID: Int,
     private val stub: ModuleStub,
     val taskFactory: (Module, TaskQuestion, List<TaskAnswer>, Int, Triple<Int, Any, Boolean>?) -> ModuleTask,
     val attemptFactory: (ModuleTask, Int?, Any?, Boolean?) -> TaskAttempt,
@@ -241,11 +241,24 @@ abstract class Skill(private val name: String, private val description: String, 
     }
 }
 
+abstract class ModuleConfig{
+    private val multipleAnswers: Boolean
+
+    init {
+        val toml=Toml().read(File("config.toml"))
+        multipleAnswers = toml.getBoolean("multipleAnswers")
+        toml.getList<Toml>("settings")
+
+    }
+
+    fun getMultipleAnswers(): Boolean {
+        return multipleAnswers
+    }
+}
+
 abstract class ModuleStub {
     abstract val descriptionName: String
-    abstract val databaseName: String
-    abstract val supportsMultipleAttempts: Boolean
-    abstract val extraAnswerTable: Boolean
+    abstract val databasePrefix: String
 
     abstract fun createModule(moduleID: Int): Module
 

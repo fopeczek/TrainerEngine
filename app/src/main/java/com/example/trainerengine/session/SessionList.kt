@@ -15,7 +15,8 @@ import com.example.trainerengine.R
 import com.example.trainerengine.SQL.GlobalSQLiteManager
 import com.example.trainerengine.SQL.SQLiteHelper
 import com.example.trainerengine.Session
-import com.example.trainerengine.modules
+import com.example.trainerengine.getTimestamp
+import com.example.trainerengine.globalModules
 import com.example.trainerengine.modules.MathModule.MathModuleStub
 import com.example.trainerengine.modules.PercentModule.PercentModuleStub
 import com.example.trainerengine.modules.PythonMathModule.PythonMathModuleStub
@@ -33,6 +34,8 @@ class SessionList : AppCompatActivity() {
         setContentView(R.layout.activity_session_list)
         supportActionBar?.title = "Session List"
 
+        // INIT
+
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(this))
         }
@@ -40,10 +43,64 @@ class SessionList : AppCompatActivity() {
         sqLiteHelper = SQLiteHelper(applicationContext)
         database = GlobalSQLiteManager(sqLiteHelper)
 
-        //load modules
-        modules.add(MathModuleStub().createModule(database.getNewModuleID()))
-        modules.add(PythonMathModuleStub().createModule(database.getNewModuleID()))
-        modules.add(PercentModuleStub().createModule(database.getNewModuleID()))
+        val savedModules = database.getModules()
+        val toBeLoadedModules = mutableListOf("Math", "PythonMath", "Percent")
+        globalModules.clear() // TODO: This is a hack to prevent modules from being added twice
+        for (module in savedModules) {
+            when (module[GlobalSQLiteManager.moduleName]) {
+                "Math" -> {
+                    globalModules.add(MathModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int))
+                    toBeLoadedModules.remove("Math")
+                }
+
+                "Percent" -> {
+                    globalModules.add(PercentModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int))
+                    toBeLoadedModules.remove("Percent")
+                }
+
+                "PythonMath" -> {
+                    globalModules.add(PythonMathModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int))
+                    toBeLoadedModules.remove("PythonMath")
+                }
+            }
+        }
+
+        for (moduleName in toBeLoadedModules) {
+            when (moduleName) {
+                "Math" -> {
+                    val moduleID = database.getNewModuleID()
+                    val module = mapOf(
+                        GlobalSQLiteManager.moduleID to moduleID,
+                        GlobalSQLiteManager.moduleName to moduleName,
+                        GlobalSQLiteManager.timestamp to getTimestamp()
+                    )
+                    database.saveModule(module)
+                    globalModules.add(MathModuleStub().createModule(moduleID))
+                }
+                "Percent" -> {
+                    val moduleID = database.getNewModuleID()
+                    val module = mapOf(
+                        GlobalSQLiteManager.moduleID to moduleID,
+                        GlobalSQLiteManager.moduleName to moduleName,
+                        GlobalSQLiteManager.timestamp to getTimestamp()
+                    )
+                    database.saveModule(module)
+                    globalModules.add(PercentModuleStub().createModule(moduleID))
+                }
+                "PythonMath" -> {
+                    val moduleID = database.getNewModuleID()
+                    val module = mapOf(
+                        GlobalSQLiteManager.moduleID to moduleID,
+                        GlobalSQLiteManager.moduleName to moduleName,
+                        GlobalSQLiteManager.timestamp to getTimestamp()
+                    )
+                    database.saveModule(module)
+                    globalModules.add(PythonMathModuleStub().createModule(moduleID))
+                }
+            }
+        }
+
+        // INIT
 
         val newSession = findViewById<FloatingActionButton>(R.id.addSession)
         newSession.setOnClickListener {
@@ -95,7 +152,7 @@ class SessionList : AppCompatActivity() {
         }
     }
 
-    private fun editListSessions(){
+    private fun editListSessions() {
         val sessionList = findViewById<LinearLayout>(R.id.session_list)
         sessionList.removeAllViews()
         invalidateOptionsMenu()
@@ -123,7 +180,7 @@ class SessionList : AppCompatActivity() {
             val sessionText = TextView(this)
             sessionText.text = session.getConfig().name
             sessionText.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Large)
-            if (session.isFinished()){
+            if (session.isFinished()) {
                 sessionText.setTextColor(getColor(R.color.green))
             }
             sessionText.setOnClickListener {

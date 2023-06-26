@@ -100,9 +100,7 @@ class PercentFragment(task: ModuleTask) : TaskFragment(task) {
 
 class PercentModuleStub : ModuleStub() {
     override val descriptionName: String = "Percent Module"
-    override val databaseName: String = "Percent"
-    override val supportsMultipleAttempts: Boolean = false
-    override val extraAnswerTable: Boolean = false
+    override val databasePrefix: String = "Percent"
 
     override fun createModule(moduleID: Int): Module {
         return PercentModule(moduleID, this)
