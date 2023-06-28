@@ -1,5 +1,6 @@
 package com.example.trainerengine.modules.PythonMathModule
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,7 +12,7 @@ import com.chaquo.python.Python
 import com.example.trainerengine.R
 import com.example.trainerengine.module.*
 
-class PythonMathModule(moduleID:Int, stub: ModuleStub) : Module(moduleID, stub,
+class PythonMathModule(moduleID: Int, context: Context, stub: ModuleStub) : Module(moduleID, context, stub,
     { module, question, answers, taskID, attempt -> PythonMathTask(module, question, answers, taskID, attempt) },
     { attempt, id, userAnswer, judgement -> PythonMathAttempt(attempt, id, userAnswer, judgement) },
     { text -> PythonMathQuestion(text) },
@@ -108,11 +109,12 @@ class PythonMathFragment(task: ModuleTask) : TaskFragment(task) {
 }
 
 class PythonMathModuleStub : ModuleStub() {
-    override val descriptionName: String = "Python Module"
-    override val databasePrefix: String = "Python"
+    override val descriptionName: String = "Python Math Module"
+    override val databasePrefix: String = "PythonMath"
+    override val moduleDirectory: String = "PythonMathModule"
 
-    override fun createModule(moduleID: Int): Module {
-        return PythonMathModule(moduleID, this)
+    override fun createModule(moduleID: Int, context: Context): Module {
+        return PythonMathModule(moduleID, context, this)
     }
 
     override fun getSkillSet(): SkillSet {

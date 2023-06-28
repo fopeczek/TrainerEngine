@@ -1,5 +1,6 @@
 package com.example.trainerengine.module
 
+import android.content.Context
 import androidx.fragment.app.Fragment
 import com.moandjiezana.toml.Toml
 import java.io.File
@@ -10,6 +11,7 @@ enum class TaskState {
 
 abstract class Module(
     private val moduleID: Int,
+    private val context: Context,
     private val stub: ModuleStub,
     val taskFactory: (Module, TaskQuestion, List<TaskAnswer>, Int, Triple<Int, Any, Boolean>?) -> ModuleTask,
     val attemptFactory: (ModuleTask, Int?, Any?, Boolean?) -> TaskAttempt,
@@ -19,13 +21,6 @@ abstract class Module(
     val judgmentFactory: (TaskAttempt, Boolean?) -> TaskJudgment,
     val fragmentFactory: (ModuleTask) -> TaskFragment
 ) {
-    fun getSettings(): List<Triple<String, String, Any>>{
-        val settings = mutableListOf<Triple<String, String, Any>>()
-        val toml=Toml().read(File("config.toml"))
-        toml.getList<Toml>("settings")
-        return settings
-    }
-
     fun getModuleID(): Int {
         return moduleID
     }
@@ -241,11 +236,11 @@ abstract class Skill(private val name: String, private val description: String, 
     }
 }
 
-abstract class ModuleConfig{
+abstract class ModuleConfig {
     private val multipleAnswers: Boolean
 
     init {
-        val toml=Toml().read(File("config.toml"))
+        val toml = Toml().read(File("config.toml"))
         multipleAnswers = toml.getBoolean("multipleAnswers")
         toml.getList<Toml>("settings")
 
@@ -259,8 +254,9 @@ abstract class ModuleConfig{
 abstract class ModuleStub {
     abstract val descriptionName: String
     abstract val databasePrefix: String
+    abstract val moduleDirectory: String
 
-    abstract fun createModule(moduleID: Int): Module
+    abstract fun createModule(moduleID: Int, context: Context): Module
 
     abstract fun getSkillSet(): SkillSet
 }

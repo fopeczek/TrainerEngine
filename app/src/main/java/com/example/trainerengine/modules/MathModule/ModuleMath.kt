@@ -1,5 +1,6 @@
 package com.example.trainerengine.modules.MathModule
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,7 +11,7 @@ import androidx.core.widget.addTextChangedListener
 import com.example.trainerengine.R
 import com.example.trainerengine.module.*
 
-class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
+class MathModule(moduleID: Int, context: Context, stub: ModuleStub) : Module(moduleID, context, stub,
     { module, question, answers, taskID, attempt -> MathTask(module, question, answers, taskID, attempt) },
     { attempt, id, userAnswer, judgement -> MathAttempt(attempt, id, userAnswer, judgement) },
     { text -> MathQuestion(text) },
@@ -112,9 +113,10 @@ class MathFragment(task: ModuleTask) : TaskFragment(task) {
 class MathModuleStub : ModuleStub() {
     override val descriptionName: String = "Math Module"
     override val databasePrefix: String = "Math"
+    override val moduleDirectory: String = "MathModule"
 
-    override fun createModule(moduleID: Int): Module {
-        return MathModule(moduleID, this)
+    override fun createModule(moduleID: Int, context: Context): Module {
+        return MathModule(moduleID, context, this)
     }
 
     override fun getSkillSet(): SkillSet {

@@ -1,5 +1,6 @@
 package com.example.trainerengine.modules.PercentModule
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,7 +13,7 @@ import com.example.trainerengine.module.*
 import java.lang.Math.*
 import kotlin.math.ln
 
-class PercentModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
+class PercentModule(moduleID: Int, context: Context, stub: ModuleStub) : Module(moduleID, context, stub,
     { module, question, answers, taskID, attempt -> PercentTask(module, question, answers, taskID, attempt) },
     { attempt, id, userAnswer, judgement -> PercentAttempt(attempt, id, userAnswer, judgement) },
     { text -> PercentQuestion(text) },
@@ -101,9 +102,10 @@ class PercentFragment(task: ModuleTask) : TaskFragment(task) {
 class PercentModuleStub : ModuleStub() {
     override val descriptionName: String = "Percent Module"
     override val databasePrefix: String = "Percent"
+    override val moduleDirectory: String = "PercentModule"
 
-    override fun createModule(moduleID: Int): Module {
-        return PercentModule(moduleID, this)
+    override fun createModule(moduleID: Int, context: Context): Module {
+        return PercentModule(moduleID, context, this)
     }
 
     override fun getSkillSet(): SkillSet {

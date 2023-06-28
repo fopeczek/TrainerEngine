@@ -15,14 +15,12 @@ class SQLiteHelper(context: Context) {
 
     init {
         val filename = "database.db"
-        val dir: File = context.getFilesDir()
+        val dir: File = context.filesDir
         val file = File(dir, filename)
-
-        try {
+        if (!file.exists()) {
             file.createNewFile()
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
+
         database = SQLiteDatabase.openOrCreateDatabase(file.absolutePath, null)
     }
 

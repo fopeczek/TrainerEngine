@@ -1,5 +1,6 @@
 package com.example.trainerengine.session
 
+import android.Manifest
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
@@ -9,6 +10,7 @@ import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.example.trainerengine.R
@@ -21,6 +23,8 @@ import com.example.trainerengine.modules.MathModule.MathModuleStub
 import com.example.trainerengine.modules.PercentModule.PercentModuleStub
 import com.example.trainerengine.modules.PythonMathModule.PythonMathModuleStub
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.moandjiezana.toml.Toml
+import java.io.File
 
 class SessionList : AppCompatActivity() {
     private lateinit var sqLiteHelper: SQLiteHelper
@@ -40,32 +44,34 @@ class SessionList : AppCompatActivity() {
             Python.start(AndroidPlatform(this))
         }
 
+        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 2)
+
         sqLiteHelper = SQLiteHelper(applicationContext)
         database = GlobalSQLiteManager(sqLiteHelper)
 
         val savedModules = database.getModules()
         val toBeLoadedModules = mutableListOf("Math", "PythonMath", "Percent")
         globalModules.clear() // TODO: This is a hack to prevent modules from being added twice
-        for (module in savedModules) {
+        for (module in savedModules) { // load saved modules
             when (module[GlobalSQLiteManager.moduleName]) {
                 "Math" -> {
-                    globalModules.add(MathModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int))
+                    globalModules.add(MathModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int, applicationContext))
                     toBeLoadedModules.remove("Math")
                 }
 
                 "Percent" -> {
-                    globalModules.add(PercentModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int))
+                    globalModules.add(PercentModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int, applicationContext))
                     toBeLoadedModules.remove("Percent")
                 }
 
                 "PythonMath" -> {
-                    globalModules.add(PythonMathModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int))
+                    globalModules.add(PythonMathModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int, applicationContext))
                     toBeLoadedModules.remove("PythonMath")
                 }
             }
         }
 
-        for (moduleName in toBeLoadedModules) {
+        for (moduleName in toBeLoadedModules) { // load remaining modules
             when (moduleName) {
                 "Math" -> {
                     val moduleID = database.getNewModuleID()
@@ -75,7 +81,7 @@ class SessionList : AppCompatActivity() {
                         GlobalSQLiteManager.timestamp to getTimestamp()
                     )
                     database.saveModule(module)
-                    globalModules.add(MathModuleStub().createModule(moduleID))
+                    globalModules.add(MathModuleStub().createModule(moduleID, applicationContext))
                 }
                 "Percent" -> {
                     val moduleID = database.getNewModuleID()
@@ -85,7 +91,7 @@ class SessionList : AppCompatActivity() {
                         GlobalSQLiteManager.timestamp to getTimestamp()
                     )
                     database.saveModule(module)
-                    globalModules.add(PercentModuleStub().createModule(moduleID))
+                    globalModules.add(PercentModuleStub().createModule(moduleID, applicationContext))
                 }
                 "PythonMath" -> {
                     val moduleID = database.getNewModuleID()
@@ -95,9 +101,40 @@ class SessionList : AppCompatActivity() {
                         GlobalSQLiteManager.timestamp to getTimestamp()
                     )
                     database.saveModule(module)
-                    globalModules.add(PythonMathModuleStub().createModule(moduleID))
+                    globalModules.add(PythonMathModuleStub().createModule(moduleID, applicationContext))
                 }
             }
+        }
+
+        val modulesDir = File(filesDir, "modules")
+        if (!modulesDir.exists()) {
+            modulesDir.mkdir()
+        }
+        for (module in globalModules) { // load modules config
+            val moduleDir = File(modulesDir, module.getStub().moduleDirectory)
+            if (!moduleDir.exists()) {
+                moduleDir.mkdir()
+            }
+            val configFile = File(moduleDir, "config.toml")
+            if (!configFile.exists()) {
+                configFile.createNewFile()
+                continue
+            }
+            val settings = mutableListOf<Triple<String, String, Any>>()
+            val toml = Toml().read(configFile)
+            for (i in 0 until toml.getList<Toml>("settings").size) {
+                val setting = toml.getTable("settings[$i]")
+                if (setting.getString("type") == "int") {
+                    settings.add(Triple(setting.getString("name"), setting.getString("type"), setting.getLong("value")))
+                } else if (setting.getString("type") == "float") {
+                    settings.add(Triple(setting.getString("name"), setting.getString("type"), setting.getDouble("value")))
+                } else if (setting.getString("type") == "string") {
+                    settings.add(Triple(setting.getString("name"), setting.getString("type"), setting.getString("value")))
+                } else if (setting.getString("type") == "bool") {
+                    settings.add(Triple(setting.getString("name"), setting.getString("type"), setting.getBoolean("value")))
+                }
+            }
+
         }
 
         // INIT
