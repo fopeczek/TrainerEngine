@@ -24,10 +24,10 @@ class SQLiteHelper(context: Context) {
         database = SQLiteDatabase.openOrCreateDatabase(file.absolutePath, null)
     }
 
-    fun initializeTable(tableName: String, columns: Map<String, ColumnType>, configTable : Boolean = false) {
+    fun initializeTable(tableName: String, columns: MutableMap<String, ColumnType>) {
         val key = columns.keys.first()
-        val keyType = columns.values.first()
-        var sql = "CREATE TABLE IF NOT EXISTS $tableName ($key $keyType PRIMARY KEY, "
+        val type = columns.values.first()
+        var sql = "CREATE TABLE IF NOT EXISTS $tableName ($key $type PRIMARY KEY,"
         for (i in 1 until columns.size) {
             sql += columns.keys.elementAt(i) + " " + columns.values.elementAt(i)
             if (i < columns.size - 1) {
@@ -36,32 +36,17 @@ class SQLiteHelper(context: Context) {
         }
         sql += ");"
         database.execSQL(sql)
-        if (configTable) {
-            insertConfigRow(tableName, columns)
-        }
     }
 
-    private fun insertConfigRow(tableName: String, columns: Map<String, ColumnType>){
-        var sql = "SELECT * FROM $tableName;"
-        val cursor = database.rawQuery(sql, null)
-        if (!cursor.moveToFirst()) {
-            sql = "INSERT INTO $tableName ("
-            for (i in 0 until columns.size) {
-                sql += columns.keys.elementAt(i)
-                if (i < columns.size - 1) {
-                    sql += ", "
-                }
-            }
-            sql += ") VALUES ("
-            for (i in 0 until columns.size) {
-                sql += "NULL"
-                if (i < columns.size - 1) {
-                    sql += ", "
-                }
-            }
-            sql += ");"
-            database.execSQL(sql)
+    fun initialize2KeyTable(tableName: String, columns: MutableMap<String, ColumnType>){
+        var sql = "CREATE TABLE IF NOT EXISTS $tableName ("
+        for (i in 0 until columns.size) {
+            sql += columns.keys.elementAt(i) + " " + columns.values.elementAt(i)
+            sql += ", "
         }
+        sql += "PRIMARY KEY (" + columns.keys.elementAt(0) + ", " + columns.keys.elementAt(1) + ")"
+        sql += ");"
+        database.execSQL(sql)
     }
 
     fun insertRow(tableName: String, values: Map<String, Any>): Int {
@@ -89,30 +74,52 @@ class SQLiteHelper(context: Context) {
         return 0
     }
 
-    fun getLastRow(tableName: String): Map<String, Any>? {
-        val sql = "SELECT * FROM $tableName;"
+    fun set2KeyRow(tableName: String, values: MutableMap<String, Any>) { // TODO when updating, remove old with different key2
+        val key1 = values.keys.first()
+        val value1 = values.values.first()
+        val key2 = values.keys.elementAt(1)
+        val value2 = values.values.elementAt(1)
+        var sql = "SELECT * FROM $tableName WHERE $key1 = $value1 AND $key2 = '$value2';"
         val cursor = database.rawQuery(sql, null)
-        var result: Map<String, Any>? = null
-        if (cursor.moveToLast()) {
-            result = fillMapFromCursor(cursor)
-        }
-        cursor.close()
-        return result
-    }
 
-    fun updateLastRow(tableName: String, values: Map<String, Any>){
-        var sql = "UPDATE $tableName SET "
-        for (i in 0 until values.size) {
-            sql += values.keys.elementAt(i) + " = "
-            val value = values.values.elementAt(i)
-            if (value is String) {
-                sql += "'$value'"
-            } else {
-                sql += value.toString()
+        if (cursor.moveToFirst()) {
+            sql = "UPDATE $tableName SET "
+            for (i in 2 until values.size) {
+                sql += values.keys.elementAt(i) + " = "
+                val value = values.values.elementAt(i)
+                if (value is String) {
+                    sql += "'$value'"
+                } else {
+                    sql += value.toString()
+                }
+                if (i < values.size - 1) {
+                    sql += ", "
+                }
             }
-            if (i < values.size - 1) {
-                sql += ", "
+            sql += " WHERE $key1 = $value1 AND $key2 = '$value2';"
+            database.execSQL(sql)
+        } else {
+            sql = "INSERT INTO $tableName ("
+            for (i in 0 until values.size) {
+                sql += values.keys.elementAt(i)
+                if (i < values.size - 1) {
+                    sql += ", "
+                }
             }
+            sql += ") VALUES ("
+            for (i in 0 until values.size) {
+                val value = values.values.elementAt(i)
+                if (value is String) {
+                    sql += "'$value'"
+                } else {
+                    sql += value.toString()
+                }
+                if (i < values.size - 1) {
+                    sql += ", "
+                }
+            }
+            sql += ");"
+            database.execSQL(sql)
         }
     }
 
@@ -157,7 +164,7 @@ class SQLiteHelper(context: Context) {
         return result
     }
 
-    fun loadByID(tableName: String, idName: String, id: Int): List<Map<String, Any>> {
+    fun getAllByID(tableName: String, idName: String, id: Int): List<Map<String, Any>> {
         val sql = "SELECT * FROM $tableName WHERE $idName = $id ORDER BY Timestamp;"
         val cursor = database.rawQuery(sql, null)
         val result = mutableListOf<Map<String, Any>>()
@@ -171,7 +178,7 @@ class SQLiteHelper(context: Context) {
         return result
     }
 
-    fun loadByIDFromTable(
+    fun getAllByIDFromTable(
         tableName: String, idTableName: String, bridgeIdName: String, idName: String, id: Int
     ): List<Map<String, Any>> {
         val sql =

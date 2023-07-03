@@ -12,7 +12,7 @@ import com.chaquo.python.Python
 import com.example.trainerengine.R
 import com.example.trainerengine.module.*
 
-class PythonMathModule(moduleID: Int, context: Context, stub: ModuleStub) : Module(moduleID, context, stub,
+class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
     { module, question, answers, taskID, attempt -> PythonMathTask(module, question, answers, taskID, attempt) },
     { attempt, id, userAnswer, judgement -> PythonMathAttempt(attempt, id, userAnswer, judgement) },
     { text -> PythonMathQuestion(text) },
@@ -113,8 +113,8 @@ class PythonMathModuleStub : ModuleStub() {
     override val databasePrefix: String = "PythonMath"
     override val moduleDirectory: String = "PythonMathModule"
 
-    override fun createModule(moduleID: Int, context: Context): Module {
-        return PythonMathModule(moduleID, context, this)
+    override fun createModule(moduleID: Int): Module {
+        return PythonMathModule(moduleID, this)
     }
 
     override fun getSkillSet(): SkillSet {

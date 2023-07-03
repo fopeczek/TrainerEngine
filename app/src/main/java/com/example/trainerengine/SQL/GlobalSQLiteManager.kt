@@ -7,6 +7,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         const val answerID = "AnswerID"
         const val sessionID = "SessionID"
         const val moduleID = "ModuleID"
+        const val configID = "ConfigID"
         const val answer = "Answer"
         const val userAnswer = "UserAnswer"
         const val question = "Question"
@@ -20,10 +21,13 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         const val targetPoints = "TargetPoints"
         const val sessionName = "SessionName"
         const val moduleName = "ModuleName"
+        const val configName = "ConfigName"
+        const val configType = "ConfigType"
+        const val configDefault = "ConfigDefault"
 
         const val sessionsTable = "Sessions"
         const val modulesTable = "Modules"
-        const val moduleConfigTable = "ModuleConfig"
+        const val configsTable = "Configs"
         const val taskTable = "Tasks"
         const val attemptsTable = "Attempts"
         const val answersTable = "Answers"
@@ -31,17 +35,17 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
 
     init {
         initializeSessionsTable()
-        initializeModulesTables()
+        initializeModulesTable()
         initializeTasksTable()
         initializeAttemptsTable()
         initializeAnswersTable()
     }
 
     private fun initializeSessionsTable() {
-        val columns = mapOf(
+        val columns = mutableMapOf(
             sessionID to ColumnType.INT,
             sessionName to ColumnType.TEXT,
-            selectedModules to ColumnType.TEXT,
+            selectedModules to ColumnType.TEXT, // TODO configID (they hold module id and config)
             points to ColumnType.INT,
             reset to ColumnType.BOOL,
             penaltyPoints to ColumnType.INT,
@@ -84,12 +88,9 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         return database.getNewID(sessionsTable, sessionID)
     }
 
-    private fun initializeModulesTables() {
-        //main modules table
-        val columns = mapOf(
-            moduleID to ColumnType.INT,
-            moduleName to ColumnType.TEXT, //hash
-            timestamp to ColumnType.TIMESTAMP
+    private fun initializeModulesTable() {
+        val columns = mutableMapOf(
+            moduleID to ColumnType.INT, moduleName to ColumnType.TEXT, timestamp to ColumnType.TIMESTAMP
         )
         database.initializeTable(modulesTable, columns)
     }
@@ -106,8 +107,41 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         return database.getNewID(modulesTable, moduleID)
     }
 
+    fun initializeModuleConfigTables(moduleId: Int, settings: List<Triple<String, String, Any>>) {
+        val columns = mutableMapOf(
+            configID to ColumnType.INT,
+            configName to ColumnType.TEXT,
+            configType to ColumnType.TEXT,
+            configDefault to ColumnType.TEXT,
+            moduleID to ColumnType.INT
+        )
+        database.initialize2KeyTable(configsTable, columns)
+        for (setting in settings) {
+            val defaults = mutableMapOf(
+                configID to 0,
+                configName to setting.first,
+                configType to setting.second,
+                configDefault to setting.third,
+                moduleID to moduleId
+            )
+            database.set2KeyRow(configsTable, defaults)
+        }
+    }
+
+    fun getModuleConfig(moduleID: Int): List<Map<String, Any>> {
+        return database.getAllByID(configsTable, Companion.moduleID, moduleID)
+    }
+
+    fun getConfig(configID: Int): List<Map<String, Any>> {
+        return database.getAllByID(configsTable, Companion.configID, configID)
+    }
+
+    fun getNewConfigID(): Int {
+        return database.getNewID(configsTable, configID)
+    }
+
     private fun initializeTasksTable() {
-        val columns = mapOf(
+        val columns = mutableMapOf(
             taskID to ColumnType.INT,
             moduleID to ColumnType.INT,
             sessionID to ColumnType.INT,
@@ -122,7 +156,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
     }
 
     fun getTasks(sessionID: Int): List<Map<String, Any>> {
-        return database.loadByID(taskTable, Companion.sessionID, sessionID)
+        return database.getAllByID(taskTable, Companion.sessionID, sessionID)
     }
 
     private fun removeTask(taskID: Int) {
@@ -136,7 +170,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
     }
 
     private fun initializeAttemptsTable() {
-        val columns = mapOf(
+        val columns = mutableMapOf(
             attemptID to ColumnType.INT,
             taskID to ColumnType.INT,
             userAnswer to ColumnType.TEXT,
@@ -151,7 +185,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
     }
 
     fun getAttempts(taskID: Int): List<Map<String, Any>> {
-        return database.loadByID(attemptsTable, Companion.taskID, taskID)
+        return database.getAllByID(attemptsTable, Companion.taskID, taskID)
     }
 
     fun getNewAttemptID(): Int {
@@ -159,11 +193,11 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
     }
 
     fun getAmountOfAttemptedTasks(sessionID: Int): Int {
-        return database.loadByIDFromTable(attemptsTable, taskTable, taskID, Companion.sessionID, sessionID).size
+        return database.getAllByIDFromTable(attemptsTable, taskTable, taskID, Companion.sessionID, sessionID).size
     }
 
     private fun initializeAnswersTable() {
-        val columns = mapOf(
+        val columns = mutableMapOf(
             answerID to ColumnType.INT,
             taskID to ColumnType.INT,
             answer to ColumnType.TEXT,
@@ -177,7 +211,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
     }
 
     fun getAnswers(taskID: Int): List<Map<String, Any>> {
-        return database.loadByID(answersTable, Companion.taskID, taskID)
+        return database.getAllByID(answersTable, Companion.taskID, taskID)
     }
 
     fun getNewAnswerID(): Int {

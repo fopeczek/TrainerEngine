@@ -32,6 +32,12 @@ class SessionList : AppCompatActivity() {
 
     private val selectedSessions = mutableListOf<Session>()
 
+    companion object {
+        const val settingName = "text"
+        const val settingType = "type"
+        const val settingDefault = "default"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.requestFeature(Window.FEATURE_ACTION_BAR)
@@ -55,17 +61,17 @@ class SessionList : AppCompatActivity() {
         for (module in savedModules) { // load saved modules
             when (module[GlobalSQLiteManager.moduleName]) {
                 "Math" -> {
-                    globalModules.add(MathModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int, applicationContext))
+                    globalModules.add(MathModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int))
                     toBeLoadedModules.remove("Math")
                 }
 
                 "Percent" -> {
-                    globalModules.add(PercentModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int, applicationContext))
+                    globalModules.add(PercentModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int))
                     toBeLoadedModules.remove("Percent")
                 }
 
                 "PythonMath" -> {
-                    globalModules.add(PythonMathModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int, applicationContext))
+                    globalModules.add(PythonMathModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int))
                     toBeLoadedModules.remove("PythonMath")
                 }
             }
@@ -81,8 +87,9 @@ class SessionList : AppCompatActivity() {
                         GlobalSQLiteManager.timestamp to getTimestamp()
                     )
                     database.saveModule(module)
-                    globalModules.add(MathModuleStub().createModule(moduleID, applicationContext))
+                    globalModules.add(MathModuleStub().createModule(moduleID))
                 }
+
                 "Percent" -> {
                     val moduleID = database.getNewModuleID()
                     val module = mapOf(
@@ -91,8 +98,9 @@ class SessionList : AppCompatActivity() {
                         GlobalSQLiteManager.timestamp to getTimestamp()
                     )
                     database.saveModule(module)
-                    globalModules.add(PercentModuleStub().createModule(moduleID, applicationContext))
+                    globalModules.add(PercentModuleStub().createModule(moduleID))
                 }
+
                 "PythonMath" -> {
                     val moduleID = database.getNewModuleID()
                     val module = mapOf(
@@ -101,7 +109,7 @@ class SessionList : AppCompatActivity() {
                         GlobalSQLiteManager.timestamp to getTimestamp()
                     )
                     database.saveModule(module)
-                    globalModules.add(PythonMathModuleStub().createModule(moduleID, applicationContext))
+                    globalModules.add(PythonMathModuleStub().createModule(moduleID))
                 }
             }
         }
@@ -110,6 +118,7 @@ class SessionList : AppCompatActivity() {
         if (!modulesDir.exists()) {
             modulesDir.mkdir()
         }
+
         for (module in globalModules) { // load modules config
             val moduleDir = File(modulesDir, module.getStub().moduleDirectory)
             if (!moduleDir.exists()) {
@@ -122,19 +131,49 @@ class SessionList : AppCompatActivity() {
             }
             val settings = mutableListOf<Triple<String, String, Any>>()
             val toml = Toml().read(configFile)
+            if (toml.getList<Toml>("settings") == null) {
+                continue
+            }
             for (i in 0 until toml.getList<Toml>("settings").size) {
                 val setting = toml.getTable("settings[$i]")
                 if (setting.getString("type") == "int") {
-                    settings.add(Triple(setting.getString("name"), setting.getString("type"), setting.getLong("value")))
+                    settings.add(
+                        Triple(
+                            setting.getString(settingName),
+                            setting.getString(settingType),
+                            setting.getLong(settingDefault)
+                        )
+                    )
                 } else if (setting.getString("type") == "float") {
-                    settings.add(Triple(setting.getString("name"), setting.getString("type"), setting.getDouble("value")))
+                    settings.add(
+                        Triple(
+                            setting.getString(settingName),
+                            setting.getString(settingType),
+                            setting.getDouble(settingDefault)
+                        )
+                    )
                 } else if (setting.getString("type") == "string") {
-                    settings.add(Triple(setting.getString("name"), setting.getString("type"), setting.getString("value")))
+                    settings.add(
+                        Triple(
+                            setting.getString(settingName),
+                            setting.getString(settingType),
+                            setting.getString(settingDefault)
+                        )
+                    )
                 } else if (setting.getString("type") == "bool") {
-                    settings.add(Triple(setting.getString("name"), setting.getString("type"), setting.getBoolean("value")))
+                    settings.add(
+                        Triple(
+                            setting.getString(settingName),
+                            setting.getString(settingType),
+                            setting.getBoolean(settingDefault)
+                        )
+                    )
                 }
             }
-
+            if (settings.size == 0) {
+                continue
+            }
+            database.initializeModuleConfigTables(module.getModuleID(), settings)
         }
 
         // INIT
