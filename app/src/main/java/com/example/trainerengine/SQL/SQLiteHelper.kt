@@ -90,7 +90,7 @@ class SQLiteHelper(context: Context) {
                 if (value is String) {
                     sql += "'$value'"
                 } else {
-                    sql += value.toString()
+                    sql += value
                 }
                 if (i < values.size - 1) {
                     sql += ", "
@@ -164,8 +164,13 @@ class SQLiteHelper(context: Context) {
         return result
     }
 
-    fun getAllByID(tableName: String, idName: String, id: Int): List<Map<String, Any>> {
-        val sql = "SELECT * FROM $tableName WHERE $idName = $id ORDER BY Timestamp;"
+    fun getAllByID(tableName: String, idName: String, id: Int, orderByTimestamp: Boolean=true): List<Map<String, Any>> {
+        var sql = "SELECT * FROM $tableName WHERE $idName = $id"
+        if (orderByTimestamp){
+            sql += " ORDER BY Timestamp;"
+        } else {
+            sql += ";"
+        }
         val cursor = database.rawQuery(sql, null)
         val result = mutableListOf<Map<String, Any>>()
         if (cursor.moveToFirst()) {

@@ -20,10 +20,13 @@ class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
     { attempt, loadedJudgement -> MathJudgment(attempt, loadedJudgement) },
     { task -> MathFragment(task) }) {
 
-    override fun makeTask(taskID: Int): ModuleTask {
-        val rand1 = (0..50).random()
-        val rand2 = (0..50).random()
-        val neg = (0..1).random()
+    override fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask {
+        val rand1 = (0..selectedConfig["Max value"] as Int).random()
+        val rand2 = (0..selectedConfig["Max value"] as Int).random()
+        var neg = (0..1).random()
+        if (selectedConfig["Do negation"] == false){
+            neg = 0
+        }
         val question: String = if (neg == 1) {
             "$rand1-$rand2="
         } else {

@@ -89,12 +89,13 @@ class SessionManager(sessionId: Int, private val activity: SessionViewer) {
         val rand = (0 until currentSession.getModules().size).random()
         val module = currentSession.getModules().elementAt(rand)
         val taskID = database.getNewTaskID()
-        val task = module.makeTask(taskID)
+        val config = database.getModuleConfig(0)
+        val task = module.makeTask(taskID, config)
         val serializedTask = mapOf<String, Any>(
             GlobalSQLiteManager.taskID to taskID,
             GlobalSQLiteManager.moduleID to rand,
             GlobalSQLiteManager.sessionID to currentSession.getSessionID(),
-            GlobalSQLiteManager.question to task.question().getQuestion().toString(),
+            GlobalSQLiteManager.question to task.question().getQuestion(),
             GlobalSQLiteManager.timestamp to getTimestamp()
         )
         database.saveTask(serializedTask)

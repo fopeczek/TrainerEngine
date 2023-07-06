@@ -28,7 +28,7 @@ abstract class Module(
         return stub
     }
 
-    abstract fun makeTask(taskID: Int): ModuleTask
+    abstract fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask
 
     fun deserializeTask(
         question: String,

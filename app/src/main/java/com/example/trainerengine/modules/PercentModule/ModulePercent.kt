@@ -22,7 +22,7 @@ class PercentModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
     { attempt, loadedJudgement -> PercentJudgment(attempt, loadedJudgement) },
     { task -> PercentFragment(task) }) {
     
-    override fun makeTask(taskID: Int): ModuleTask {
+    override fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask {
         val rand = (0..100).random()
         val question = "$rand%"
         return PercentTask(this, PercentQuestion(question), listOf(PercentAnswer(0, rand)), taskID)

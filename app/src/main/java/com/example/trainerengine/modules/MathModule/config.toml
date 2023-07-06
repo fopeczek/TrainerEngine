@@ -1,11 +1,11 @@
 multipleAnswers = false
 
 [[settings]]
-text = "Do division"
+text = "Do negation"
 type = "bool"
-default = false
+default = true
 
 [[settings]]
-text = "Multiplication up to"
+text = "Max value"
 type = "int"
-default = 20
+default = 50

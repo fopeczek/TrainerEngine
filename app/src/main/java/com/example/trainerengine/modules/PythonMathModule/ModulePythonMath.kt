@@ -22,7 +22,7 @@ class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
     { task -> PythonMathFragment(task) }) {
     val pythonModule = Python.getInstance().getModule("multiplyModule")
 
-    override fun makeTask(taskID: Int): ModuleTask {
+    override fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask {
         pythonModule.callAttr("make_task")
         val question = pythonModule.callAttr("get_question").toString()
         val answer = pythonModule.callAttr("get_answer").toString()
@@ -91,7 +91,7 @@ class PythonMathFragment(task: ModuleTask) : TaskFragment(task) {
         val questionView = view.findViewById(R.id.MathQuestion) as TextView
         val answerInput = view.findViewById(R.id.MathAnswer) as EditText
 
-        questionView.text = getTask().question().getQuestion().toString()
+        questionView.text = getTask().question().getQuestion()
         val userAnswer = getTask().getCurrentAttempt().userAnswer.getUserAnswer()
         if (userAnswer != null) {
             answerInput.setText(userAnswer.toString())

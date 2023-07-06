@@ -23,7 +23,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         const val moduleName = "ModuleName"
         const val configName = "ConfigName"
         const val configType = "ConfigType"
-        const val configDefault = "ConfigDefault"
+        const val configValue = "ConfigValue"
 
         const val sessionsTable = "Sessions"
         const val modulesTable = "Modules"
@@ -112,7 +112,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
             configID to ColumnType.INT,
             configName to ColumnType.TEXT,
             configType to ColumnType.TEXT,
-            configDefault to ColumnType.TEXT,
+            configValue to ColumnType.TEXT,
             moduleID to ColumnType.INT
         )
         database.initialize2KeyTable(configsTable, columns)
@@ -121,23 +121,28 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
                 configID to 0,
                 configName to setting.first,
                 configType to setting.second,
-                configDefault to setting.third,
+                configValue to setting.third,
                 moduleID to moduleId
             )
             database.set2KeyRow(configsTable, defaults)
         }
     }
 
-    fun getModuleConfig(moduleID: Int): List<Map<String, Any>> {
-        return database.getAllByID(configsTable, Companion.moduleID, moduleID)
-    }
-
-    fun getConfig(configID: Int): List<Map<String, Any>> {
-        return database.getAllByID(configsTable, Companion.configID, configID)
-    }
-
-    fun getNewConfigID(): Int {
-        return database.getNewID(configsTable, configID)
+    fun getModuleConfig(configID: Int): Map<String, Any> {
+        val data = database.getAllByID(configsTable, Companion.configID, configID, false)
+        val config = mutableMapOf<String, Any>()
+        for (row in data) {
+            if (row[configType] == "bool") {
+                config[row[configName] as String] = (row[configValue] as String).toBoolean()
+            } else if (row[configType] == "int") {
+                config[row[configName] as String] = (row[configValue] as String).toInt()
+            } else if (row[configType] == "float") {
+                config[row[configName] as String] = (row[configValue] as String).toFloat()
+            } else if (row[configType] == "string") {
+                config[row[configName] as String] = row[configValue] as String
+            }
+        }
+        return config
     }
 
     private fun initializeTasksTable() {
