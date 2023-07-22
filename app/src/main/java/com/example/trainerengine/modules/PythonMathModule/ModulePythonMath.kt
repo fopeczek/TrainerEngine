@@ -23,11 +23,14 @@ class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
     val pythonModule = Python.getInstance().getModule("multiplyModule")
 
     override fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask {
-        pythonModule.callAttr("make_task")
-        val question = pythonModule.callAttr("get_question").toString()
-        val answer = pythonModule.callAttr("get_answer").toString()
+        val config = mutableListOf<Any>()
+        for (conf in selectedConfig){
+            config.add(conf.value)
+        }
+        val questAns = pythonModule.callAttr("make_task", config).asList()
+        assert(questAns.size==2) //TODO replace with on init validation
         return PythonMathTask(
-            this, PythonMathQuestion(question), listOf(PythonMathAnswer(1, answer)), taskID
+            this, PythonMathQuestion(questAns[0].toString()), listOf(PythonMathAnswer(1, questAns[1].toString())), taskID
         )
     }
 }

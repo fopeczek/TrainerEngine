@@ -11,7 +11,8 @@ import androidx.core.widget.addTextChangedListener
 import com.example.trainerengine.R
 import com.example.trainerengine.module.*
 
-class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
+class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
+    stub,
     { module, question, answers, taskID, attempt -> MathTask(module, question, answers, taskID, attempt) },
     { attempt, id, userAnswer, judgement -> MathAttempt(attempt, id, userAnswer, judgement) },
     { text -> MathQuestion(text) },
@@ -21,10 +22,20 @@ class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
     { task -> MathFragment(task) }) {
 
     override fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask {
-        val rand1 = (0..selectedConfig["Max value"] as Int).random()
-        val rand2 = (0..selectedConfig["Max value"] as Int).random()
+        var maxVal = selectedConfig["Max value"]
+        if (maxVal == null) {
+            maxVal = 50 //TODO replace with assert (Error couldn't find Max value config)
+        } else {
+            maxVal = maxVal as Int
+        }
+        var doNeg = selectedConfig["Do negation"]
+        if (doNeg == null) {
+            doNeg = true //TODO replace with assert (Error couldn't find Do negation config)
+        }
+        val rand1 = (0..maxVal).random()
+        val rand2 = (0..maxVal).random()
         var neg = (0..1).random()
-        if (selectedConfig["Do negation"] == false){
+        if (doNeg == false) {
             neg = 0
         }
         val question: String = if (neg == 1) {

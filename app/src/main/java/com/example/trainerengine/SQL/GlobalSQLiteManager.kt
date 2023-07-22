@@ -128,10 +128,11 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         }
     }
 
-    fun getModuleConfig(configID: Int): Map<String, Any> {
+    fun getModuleConfig(configID: Int, moduleId: Int): Map<String, Any> {
         val data = database.getAllByID(configsTable, Companion.configID, configID, false)
         val config = mutableMapOf<String, Any>()
         for (row in data) {
+            if(row[moduleID] != moduleId) continue
             if (row[configType] == "bool") {
                 config[row[configName] as String] = (row[configValue] as String).toBoolean()
             } else if (row[configType] == "int") {

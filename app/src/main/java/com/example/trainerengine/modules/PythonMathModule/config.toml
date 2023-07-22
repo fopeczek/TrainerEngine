@@ -1,0 +1,6 @@
+multipleAnswers = false
+
+[[settings]]
+text = "Max value"
+type = "int"
+default = 30

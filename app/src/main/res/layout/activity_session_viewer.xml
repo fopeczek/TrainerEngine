@@ -28,4 +28,16 @@
             android:id="@+id/Points"
             app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintTop_toBottomOf="@+id/Submit"
             app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"/>
+    <ImageView
+            android:src="@drawable/avd_correct"
+            android:layout_width="128dp"
+            android:layout_height="128dp" android:id="@+id/Correct"
+            app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginTop="32dp"/>
+    <ImageView
+            android:src="@drawable/avd_wrong"
+            android:layout_width="128dp"
+            android:layout_height="128dp" android:id="@+id/Wrong"
+            app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginTop="32dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
