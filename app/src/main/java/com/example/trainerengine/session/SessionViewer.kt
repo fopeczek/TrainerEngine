@@ -205,8 +205,10 @@ class SessionViewer : AppCompatActivity() {
                 super.onPageSelected(position)
                 supportActionBar?.title = getCurrentTask().module().getStub().descriptionName
                 var correctAvd = correct.drawable as SeekableAnimatedVectorDrawable
+                correctAvd.stop()
                 correctAvd.currentPlayTime = 0
                 val wrongAvd = wrong.drawable as SeekableAnimatedVectorDrawable
+                wrongAvd.stop()
                 wrongAvd.currentPlayTime = 0
                 if (getCurrentTask().getState() == TaskState.LOCKED) {
                     findViewById<Button>(R.id.Submit).isEnabled = false

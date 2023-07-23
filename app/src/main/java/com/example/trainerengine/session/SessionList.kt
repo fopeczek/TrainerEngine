@@ -114,23 +114,10 @@ class SessionList : AppCompatActivity() {
             }
         }
 
-        val modulesDir = File(filesDir, "modules")
-        if (!modulesDir.exists()) {
-            modulesDir.mkdir()
-        }
-
         for (module in globalModules) { // load modules config
-            val moduleDir = File(modulesDir, module.getStub().moduleDirectory)
-            if (!moduleDir.exists()) {
-                moduleDir.mkdir()
-            }
-            val configFile = File(moduleDir, "config.toml")
-            if (!configFile.exists()) {
-                configFile.createNewFile()
-                continue
-            }
+            val configStream = assets.open("modules/${module.getStub().moduleDirectory}/config.toml")
             val settings = mutableListOf<Triple<String, String, Any>>()
-            val toml = Toml().read(configFile)
+            val toml = Toml().read(configStream)
             if (toml.getList<Toml>("settings") == null) {
                 continue
             }
