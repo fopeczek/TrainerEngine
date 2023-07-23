@@ -21,7 +21,7 @@ class PercentModule(stub: ModuleStub) : Module(stub,
     { attempt, loadedJudgement -> PercentJudgment(attempt, loadedJudgement) },
     { task -> PercentFragment(task) }) {
     
-    override fun makeTask(taskID: Int): ModuleTask {
+    override fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask {
         val rand = (0..100).random()
         val question = "$rand%"
         return PercentTask(this, PercentQuestion(question), listOf(PercentAnswer(0, rand)), taskID)
@@ -100,9 +100,8 @@ class PercentFragment(task: ModuleTask) : TaskFragment(task) {
 
 class PercentModuleStub : ModuleStub() {
     override val descriptionName: String = "Percent Module"
-    override val databaseName: String = "Percent"
-    override val supportsMultipleAttempts: Boolean = false
-    override val extraAnswerTable: Boolean = false
+    override val databasePrefix: String = "Percent"
+    override val moduleDirectory: String = "PercentModule"
 
     override fun createModule(): Module {
         return PercentModule(this)

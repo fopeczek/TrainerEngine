@@ -1,9 +1,0 @@
-[[settings]]
-text = "Do division"
-type = "bool"
-default = false
-
-[[settings]]
-text = "Multiplication up to"
-type = "int"
-default = 20

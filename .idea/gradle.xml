@@ -7,8 +7,8 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$/../../../../../Mik-docs/Documents/Projects/TrainerEngine/TrainerEngine" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$/../../../../../Mik-docs/Documents/Projects/TrainerEngine/TrainerEngine" />
-            <option value="$PROJECT_DIR$/../../../../../Mik-docs/Documents/Projects/TrainerEngine/TrainerEngine/app" />
+            <option value="$PROJECT_DIR$/../../../../../Mik-docs/Documents/Development/Kotlin/TrainerEngine" />
+            <option value="$PROJECT_DIR$/../../../../../Mik-docs/Documents/Development/Kotlin/TrainerEngine/app" />
           </set>
         </option>
       </GradleProjectSettings>
@@ -16,8 +16,8 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$/../../../../../Mik-docs/Documents/Projects/TrainerEngine/TrainerEngine" />
-            <option value="$PROJECT_DIR$/../../../../../Mik-docs/Documents/Projects/TrainerEngine/TrainerEngine/app" />
+            <option value="$PROJECT_DIR$/../../../../../Mik-docs/Documents/Development/Kotlin/TrainerEngine" />
+            <option value="$PROJECT_DIR$/../../../../../Mik-docs/Documents/Development/Kotlin/TrainerEngine/app" />
           </set>
         </option>
       </GradleProjectSettings>

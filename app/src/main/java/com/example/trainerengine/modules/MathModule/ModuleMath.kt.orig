@@ -10,8 +10,12 @@ import androidx.core.widget.addTextChangedListener
 import com.example.trainerengine.R
 import com.example.trainerengine.module.*
 
+<<<<<<< HEAD
+class MathModule(stub: ModuleStub) : Module(stub,
+=======
 class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     stub,
+>>>>>>> module-config
     { module, question, answers, taskID, attempt -> MathTask(module, question, answers, taskID, attempt) },
     { attempt, id, userAnswer, judgement -> MathAttempt(attempt, id, userAnswer, judgement) },
     { text -> MathQuestion(text) },
@@ -128,8 +132,13 @@ class MathModuleStub : ModuleStub() {
     override val databasePrefix: String = "Math"
     override val moduleDirectory: String = "MathModule"
 
+<<<<<<< HEAD
+    override fun createModule(): Module {
+        return MathModule(this)
+=======
     override fun createModule(moduleID: Int): Module {
         return MathModule(moduleID, this)
+>>>>>>> module-config
     }
 
     override fun getSkillSet(): SkillSet {

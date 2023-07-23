@@ -11,7 +11,7 @@ import com.chaquo.python.Python
 import com.example.trainerengine.R
 import com.example.trainerengine.module.*
 
-class PythonMathModule(stub: ModuleStub) : Module(stub,
+class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
     { module, question, answers, taskID, attempt -> PythonMathTask(module, question, answers, taskID, attempt) },
     { attempt, id, userAnswer, judgement -> PythonMathAttempt(attempt, id, userAnswer, judgement) },
     { text -> PythonMathQuestion(text) },
@@ -21,12 +21,15 @@ class PythonMathModule(stub: ModuleStub) : Module(stub,
     { task -> PythonMathFragment(task) }) {
     val pythonModule = Python.getInstance().getModule("multiplyModule")
 
-    override fun makeTask(taskID: Int): ModuleTask {
-        pythonModule.callAttr("make_task")
-        val question = pythonModule.callAttr("get_question").toString()
-        val answer = pythonModule.callAttr("get_answer").toString()
+    override fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask {
+        val config = mutableListOf<Any>()
+        for (conf in selectedConfig){
+            config.add(conf.value)
+        }
+        val questAns = pythonModule.callAttr("make_task", config).asList()
+        assert(questAns.size==2) //TODO replace with on init validation
         return PythonMathTask(
-            this, PythonMathQuestion(question), listOf(PythonMathAnswer(1, answer)), taskID
+            this, PythonMathQuestion(questAns[0].toString()), listOf(PythonMathAnswer(1, questAns[1].toString())), taskID
         )
     }
 }
@@ -90,7 +93,7 @@ class PythonMathFragment(task: ModuleTask) : TaskFragment(task) {
         val questionView = view.findViewById(R.id.MathQuestion) as TextView
         val answerInput = view.findViewById(R.id.MathAnswer) as EditText
 
-        questionView.text = getTask().question().getQuestion().toString()
+        questionView.text = getTask().question().getQuestion()
         val userAnswer = getTask().getCurrentAttempt().userAnswer.getUserAnswer()
         if (userAnswer != null) {
             answerInput.setText(userAnswer.toString())
@@ -108,13 +111,12 @@ class PythonMathFragment(task: ModuleTask) : TaskFragment(task) {
 }
 
 class PythonMathModuleStub : ModuleStub() {
-    override val descriptionName: String = "Python Module"
-    override val databaseName: String = "Python"
-    override val supportsMultipleAttempts: Boolean = false
-    override val extraAnswerTable: Boolean = false
+    override val descriptionName: String = "Python Math Module"
+    override val databasePrefix: String = "PythonMath"
+    override val moduleDirectory: String = "PythonMathModule"
 
-    override fun createModule(): Module {
-        return PythonMathModule(this)
+    override fun createModule(moduleID: Int): Module {
+        return PythonMathModule(moduleID, this)
     }
 
     override fun getSkillSet(): SkillSet {

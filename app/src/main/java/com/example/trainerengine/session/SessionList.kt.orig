@@ -17,8 +17,11 @@ import com.example.trainerengine.R
 import com.example.trainerengine.SQL.GlobalSQLiteManager
 import com.example.trainerengine.SQL.SQLiteHelper
 import com.example.trainerengine.Session
+<<<<<<< HEAD
+=======
 import com.example.trainerengine.getTimestamp
 import com.example.trainerengine.globalModules
+>>>>>>> module-config
 import com.example.trainerengine.modules.MathModule.MathModuleStub
 import com.example.trainerengine.modules.PercentModule.PercentModuleStub
 import com.example.trainerengine.modules.PythonMathModule.PythonMathModuleStub
@@ -55,6 +58,8 @@ class SessionList : AppCompatActivity() {
         sqLiteHelper = SQLiteHelper(applicationContext)
         database = GlobalSQLiteManager(sqLiteHelper)
 
+<<<<<<< HEAD
+=======
         val savedModules = database.getModules()
         val toBeLoadedModules = mutableListOf("Math", "PythonMath", "Percent")
         globalModules.clear() // TODO: This is a hack to prevent modules from being added twice
@@ -165,6 +170,7 @@ class SessionList : AppCompatActivity() {
 
         // INIT
 
+>>>>>>> module-config
         val newSession = findViewById<FloatingActionButton>(R.id.addSession)
         newSession.setOnClickListener {
             val intent = Intent(this, SessionEditor::class.java)

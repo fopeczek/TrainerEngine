@@ -1,4 +1,4 @@
-package com.example.trainerengine.modules.MathModule
+package com.example.trainerengine.modules.PythonMathModule
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,51 +7,38 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
 import androidx.core.widget.addTextChangedListener
+import com.chaquo.python.Python
 import com.example.trainerengine.R
 import com.example.trainerengine.module.*
 
-class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
-    stub,
-    { module, question, answers, taskID, attempt -> MathTask(module, question, answers, taskID, attempt) },
-    { attempt, id, userAnswer, judgement -> MathAttempt(attempt, id, userAnswer, judgement) },
-    { text -> MathQuestion(text) },
-    { id, text -> MathAnswer(id, text.toInt()) },
-    { attempt, loadedUserAnswer -> MathUserAnswer(attempt, loadedUserAnswer) },
-    { attempt, loadedJudgement -> MathJudgment(attempt, loadedJudgement) },
-    { task -> MathFragment(task) }) {
+<<<<<<< HEAD
+class PythonMathModule(stub: ModuleStub) : Module(stub,
+=======
+class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
+>>>>>>> module-config
+    { module, question, answers, taskID, attempt -> PythonMathTask(module, question, answers, taskID, attempt) },
+    { attempt, id, userAnswer, judgement -> PythonMathAttempt(attempt, id, userAnswer, judgement) },
+    { text -> PythonMathQuestion(text) },
+    { id, text -> PythonMathAnswer(id, text) },
+    { attempt, loadedUserAnswer -> PythonMathUserAnswer(attempt, loadedUserAnswer) },
+    { attempt, loadedJudgement -> PythonMathJudgment(attempt, loadedJudgement) },
+    { task -> PythonMathFragment(task) }) {
+    val pythonModule = Python.getInstance().getModule("multiplyModule")
 
     override fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask {
-        var maxVal = selectedConfig["Max value"]
-        if (maxVal == null) {
-            maxVal = 50 //TODO replace with assert (Error couldn't find Max value config)
-        } else {
-            maxVal = maxVal as Int
+        val config = mutableListOf<Any>()
+        for (conf in selectedConfig){
+            config.add(conf.value)
         }
-        var doNeg = selectedConfig["Do negation"]
-        if (doNeg == null) {
-            doNeg = true //TODO replace with assert (Error couldn't find Do negation config)
-        }
-        val rand1 = (0..maxVal).random()
-        val rand2 = (0..maxVal).random()
-        var neg = (0..1).random()
-        if (doNeg == false) {
-            neg = 0
-        }
-        val question: String = if (neg == 1) {
-            "$rand1-$rand2="
-        } else {
-            "$rand1+$rand2="
-        }
-        val answer: Int = if (neg == 1) {
-            rand1 - rand2
-        } else {
-            rand1 + rand2
-        }
-        return MathTask(this, MathQuestion(question), listOf(MathAnswer(1, answer)), taskID)
+        val questAns = pythonModule.callAttr("make_task", config).asList()
+        assert(questAns.size==2) //TODO replace with on init validation
+        return PythonMathTask(
+            this, PythonMathQuestion(questAns[0].toString()), listOf(PythonMathAnswer(1, questAns[1].toString())), taskID
+        )
     }
 }
 
-class MathTask(
+class PythonMathTask(
     module: Module,
     question: TaskQuestion,
     answers: List<TaskAnswer>,
@@ -59,24 +46,28 @@ class MathTask(
     loadedAttempt: Triple<Int, Any, Boolean>? = null
 ) : ModuleTask(module, question, answers, taskID, loadedAttempt)
 
-class MathAttempt(
+class PythonMathAttempt(
     task: ModuleTask, loadedAttemptID: Int? = null, loadedUserAnswer: Any? = null, loadedJudgment: Boolean? = null
 ) : TaskAttempt(task, loadedAttemptID, loadedUserAnswer, loadedJudgment)
 
-class MathQuestion(question: String) : TaskQuestion(question)
+class PythonMathQuestion(question: String) : TaskQuestion(question)
 
-class MathAnswer(answerID: Int, answer: Int) : TaskAnswer(answerID, answer.toString())
+class PythonMathAnswer(id: Int, answer: String) : TaskAnswer(id, answer)
 
-class MathUserAnswer(attempt: TaskAttempt, loadedUserAnswer: Any?) : TaskUserAnswer(attempt, loadedUserAnswer)
+class PythonMathUserAnswer(attempt: TaskAttempt, loadedUserAnswer: Any?) : TaskUserAnswer(attempt, loadedUserAnswer)
 
-class MathJudgment(attempt: TaskAttempt, loadedJudgment: Boolean?) : TaskJudgment(attempt, loadedJudgment) {
+class PythonMathJudgment(attempt: TaskAttempt, loadedJudgment: Boolean?) : TaskJudgment(attempt, loadedJudgment) {
     override fun checkAnswer() {
-        judgement =
-            attempt.userAnswer.getUserAnswer().toString().toInt() == attempt.task().getAnswers()[0].getAnswer().toInt()
+        val module = attempt.task().module() as PythonMathModule
+        judgement = module.pythonModule.callAttr(
+            "check_answer",
+            attempt.task().getAnswers().first().getAnswer(),
+            attempt.userAnswer.getUserAnswer().toString()
+        ).toBoolean()
     }
 }
 
-class MathFragment(task: ModuleTask) : TaskFragment(task) {
+class PythonMathFragment(task: ModuleTask) : TaskFragment(task) {
     private lateinit var view: View
 
     override fun onCreateView(
@@ -106,7 +97,7 @@ class MathFragment(task: ModuleTask) : TaskFragment(task) {
         val questionView = view.findViewById(R.id.MathQuestion) as TextView
         val answerInput = view.findViewById(R.id.MathAnswer) as EditText
 
-        questionView.text = getTask().question().getQuestion().toString()
+        questionView.text = getTask().question().getQuestion()
         val userAnswer = getTask().getCurrentAttempt().userAnswer.getUserAnswer()
         if (userAnswer != null) {
             answerInput.setText(userAnswer.toString())
@@ -123,13 +114,13 @@ class MathFragment(task: ModuleTask) : TaskFragment(task) {
     }
 }
 
-class MathModuleStub : ModuleStub() {
-    override val descriptionName: String = "Math Module"
-    override val databasePrefix: String = "Math"
-    override val moduleDirectory: String = "MathModule"
+class PythonMathModuleStub : ModuleStub() {
+    override val descriptionName: String = "Python Math Module"
+    override val databasePrefix: String = "PythonMath"
+    override val moduleDirectory: String = "PythonMathModule"
 
-    override fun createModule(moduleID: Int): Module {
-        return MathModule(moduleID, this)
+    override fun createModule(): Module {
+        return PythonMathModule(this)
     }
 
     override fun getSkillSet(): SkillSet {

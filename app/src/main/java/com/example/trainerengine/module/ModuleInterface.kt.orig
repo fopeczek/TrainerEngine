@@ -10,7 +10,10 @@ enum class TaskState {
 }
 
 abstract class Module(
+<<<<<<< HEAD
+=======
     private val moduleID: Int,
+>>>>>>> module-config
     private val stub: ModuleStub,
     val taskFactory: (Module, TaskQuestion, List<TaskAnswer>, Int, Triple<Int, Any, Boolean>?) -> ModuleTask,
     val attemptFactory: (ModuleTask, Int?, Any?, Boolean?) -> TaskAttempt,
@@ -20,10 +23,13 @@ abstract class Module(
     val judgmentFactory: (TaskAttempt, Boolean?) -> TaskJudgment,
     val fragmentFactory: (ModuleTask) -> TaskFragment
 ) {
+<<<<<<< HEAD
+=======
     fun getModuleID(): Int {
         return moduleID
     }
 
+>>>>>>> module-config
     fun getStub(): ModuleStub {
         return stub
     }
@@ -240,7 +246,7 @@ abstract class ModuleStub {
     abstract val databasePrefix: String
     abstract val moduleDirectory: String
 
-    abstract fun createModule(moduleID: Int): Module
+    abstract fun createModule(): Module
 
     abstract fun getSkillSet(): SkillSet
 }

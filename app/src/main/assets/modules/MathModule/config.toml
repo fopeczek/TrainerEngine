@@ -1,0 +1,11 @@
+multipleAnswers = false
+
+[[settings]]
+text = "Do negation"
+type = "bool"
+default = true
+
+[[settings]]
+text = "Max value"
+type = "int"
+default = 50

@@ -37,6 +37,18 @@ class Session(
         val serializedModules = (serializedSession[GlobalSQLiteManager.selectedModules] as String).split(",")
         for (serializedModule in serializedModules) {
             when (serializedModule) {
+<<<<<<< HEAD
+                MathModuleStub().databaseName -> {
+                    modules.add(MathModuleStub().createModule())
+                }
+
+                PercentModuleStub().databaseName -> {
+                    modules.add(PercentModuleStub().createModule())
+                }
+
+                PythonMathModuleStub().databaseName -> {
+                    modules.add(PythonMathModuleStub().createModule())
+=======
                 MathModuleStub().databasePrefix -> {
                     for (module in globalModules) {
                         if (module.getStub().databasePrefix == MathModuleStub().databasePrefix) {
@@ -57,6 +69,7 @@ class Session(
                             modules.add(module)
                         }
                     }
+>>>>>>> module-config
                 }
             }
         }

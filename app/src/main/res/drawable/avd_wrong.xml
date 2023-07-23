@@ -1,0 +1,49 @@
+<animated-vector xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    tools:targetApi="lollipop">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:name="vector"
+            android:width="84dp"
+            android:height="84dp"
+            android:viewportWidth="84"
+            android:viewportHeight="84">
+            <path
+                    android:name="left"
+                    android:pathData="M 75 9 L 9 75"
+                    android:strokeColor="#FF0000"
+                    android:strokeWidth="10"
+                    android:trimPathEnd="0"/>
+            <path
+                    android:name="right"
+                    android:pathData="M 9 9 L 75 75"
+                    android:strokeColor="#FF0000"
+                    android:strokeWidth="10"
+                    android:trimPathEnd="0"/>
+        </vector>
+    </aapt:attr>
+    <target android:name="left">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:duration="250"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        </aapt:attr>
+    </target>
+    <target android:name="right">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="250"
+                    android:duration="250"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        </aapt:attr>
+    </target>
+</animated-vector>

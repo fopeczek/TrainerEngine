@@ -1,28 +1,16 @@
 import random
 
-question = ""
-answer = 0
-
-
-def make_task():
-    global question
-    global answer
+def make_task(config):
     isok = False
     while not isok:
-        rand1 = random.randint(1, 20)
-        rand2 = random.randint(1, 20)
+        rand1 = random.randint(0, config.get(0))
+        rand2 = random.randint(0, config.get(0))
         answer = rand1 * rand2
-        isok = answer <= 20
+        isok = answer <= config.get(0)
 
     question = f"{rand1}*{rand2}="
 
-def get_question():
-    return question
-
-
-def get_answer():
-    return answer
-
+    return question, answer
 
 def check_answer(ans, user_answer):
     return ans == user_answer

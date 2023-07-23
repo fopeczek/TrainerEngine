@@ -1,16 +1,21 @@
 package com.example.trainerengine.session
 
 import android.content.Intent
+import android.graphics.drawable.AnimatedVectorDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.Menu
 import android.view.Window
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
+import androidx.vectordrawable.graphics.drawable.SeekableAnimatedVectorDrawable
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.chaquo.python.Python
@@ -42,9 +47,11 @@ class SessionManager(sessionId: Int, private val activity: SessionViewer) {
         val attempt = task.getCurrentAttempt()
         val judgement = attempt.checkAnswer()!!
         if (judgement.isCorrect()) {
-            Toast.makeText(activity, "Correct!", Toast.LENGTH_SHORT).show()
+            val avd = activity.getCorrectDrawable() as SeekableAnimatedVectorDrawable
+            avd.start()
         } else {
-            Toast.makeText(activity, "Incorrect!", Toast.LENGTH_SHORT).show()
+            val avd = activity.getWrongDrawable() as SeekableAnimatedVectorDrawable
+            avd.start()
         }
 
         val serializedAttempt = mapOf<String, Any>(
@@ -89,12 +96,13 @@ class SessionManager(sessionId: Int, private val activity: SessionViewer) {
         val rand = (0 until currentSession.getModules().size).random()
         val module = currentSession.getModules().elementAt(rand)
         val taskID = database.getNewTaskID()
-        val task = module.makeTask(taskID)
+        val config = database.getModuleConfig(0, module.getModuleID())
+        val task = module.makeTask(taskID, config)
         val serializedTask = mapOf<String, Any>(
             GlobalSQLiteManager.taskID to taskID,
             GlobalSQLiteManager.moduleID to rand,
             GlobalSQLiteManager.sessionID to currentSession.getSessionID(),
-            GlobalSQLiteManager.question to task.question().getQuestion().toString(),
+            GlobalSQLiteManager.question to task.question().getQuestion(),
             GlobalSQLiteManager.timestamp to getTimestamp()
         )
         database.saveTask(serializedTask)
@@ -164,6 +172,8 @@ class SessionViewer : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var pager: ViewPager2
     private lateinit var progressBar: ProgressBar
+    private lateinit var correct: ImageView
+    private lateinit var wrong: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -185,10 +195,31 @@ class SessionViewer : AppCompatActivity() {
         val adapter = TaskPagerAdapter(supportFragmentManager, lifecycle, sessionManager)
         pager.adapter = adapter
 
+        correct = findViewById(R.id.Correct)
+        correct.setImageDrawable(SeekableAnimatedVectorDrawable.create(this, R.drawable.avd_correct))
+        wrong = findViewById(R.id.Wrong)
+        wrong.setImageDrawable(SeekableAnimatedVectorDrawable.create(this, R.drawable.avd_wrong))
+
         pager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 supportActionBar?.title = getCurrentTask().module().getStub().descriptionName
+                var correctAvd = correct.drawable as SeekableAnimatedVectorDrawable
+                correctAvd.stop()
+                correctAvd.currentPlayTime = 0
+                val wrongAvd = wrong.drawable as SeekableAnimatedVectorDrawable
+                wrongAvd.stop()
+                wrongAvd.currentPlayTime = 0
+                if (getCurrentTask().getState() == TaskState.LOCKED) {
+                    findViewById<Button>(R.id.Submit).isEnabled = false
+                    if (getCurrentTask().getCurrentAttempt().checkAnswer()!!.isCorrect()) {
+                        correctAvd.currentPlayTime = correctAvd.totalDuration
+                    } else {
+                        wrongAvd.currentPlayTime = wrongAvd.totalDuration
+                    }
+                } else {
+                    findViewById<Button>(R.id.Submit).isEnabled = true
+                }
             }
         })
 
@@ -197,6 +228,14 @@ class SessionViewer : AppCompatActivity() {
         progressBar = findViewById(R.id.Points)
         progressBar.max = sessionManager.getTargetPoints()
         progressBar.progress = sessionManager.getPoints()
+    }
+
+    fun getCorrectDrawable(): Drawable {
+        return correct.drawable
+    }
+
+    fun getWrongDrawable(): Drawable {
+        return wrong.drawable
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
