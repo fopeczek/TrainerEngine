@@ -1,9 +1,6 @@
 package com.example.trainerengine.module
 
-import android.content.Context
 import androidx.fragment.app.Fragment
-import com.moandjiezana.toml.Toml
-import java.io.File
 
 enum class TaskState {
     AWAITING, LOCKED,
@@ -28,7 +25,7 @@ abstract class Module(
         return stub
     }
 
-    abstract fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask
+    abstract fun makeTask(taskID: Int, config: ModuleConfig): ModuleTask
 
     fun deserializeTask(
         question: String,
@@ -95,10 +92,6 @@ abstract class ModuleTask(
 
     fun getState(): TaskState {
         return state
-    }
-
-    fun serialize(): String {
-        return ""
     }
 }
 
@@ -237,7 +230,7 @@ abstract class Skill(private val name: String, private val description: String, 
 
 abstract class ModuleStub {
     abstract val descriptionName: String
-    abstract val databasePrefix: String
+    abstract val databaseName: String
     abstract val moduleDirectory: String
 
     abstract fun createModule(moduleID: Int): Module

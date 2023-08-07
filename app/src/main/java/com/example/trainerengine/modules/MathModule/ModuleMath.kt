@@ -20,14 +20,14 @@ class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     { attempt, loadedJudgement -> MathJudgment(attempt, loadedJudgement) },
     { task -> MathFragment(task) }) {
 
-    override fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask {
-        var maxVal = selectedConfig["Max value"]
+    override fun makeTask(taskID: Int, config: ModuleConfig): ModuleTask {
+        var maxVal = config.getConfigData("Max value")!!.getValue()
         if (maxVal == null) {
             maxVal = 50 //TODO replace with assert (Error couldn't find Max value config)
         } else {
             maxVal = maxVal as Int
         }
-        var doNeg = selectedConfig["Do negation"]
+        var doNeg = config.getConfigData("Do negation")!!.getValue()
         if (doNeg == null) {
             doNeg = true //TODO replace with assert (Error couldn't find Do negation config)
         }
@@ -125,7 +125,7 @@ class MathFragment(task: ModuleTask) : TaskFragment(task) {
 
 class MathModuleStub : ModuleStub() {
     override val descriptionName: String = "Math Module"
-    override val databasePrefix: String = "Math"
+    override val databaseName: String = "Math"
     override val moduleDirectory: String = "MathModule"
 
     override fun createModule(moduleID: Int): Module {

@@ -1,7 +1,6 @@
 package com.example.trainerengine.session
 
 import android.content.Intent
-import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.Menu
@@ -14,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
-import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import androidx.vectordrawable.graphics.drawable.SeekableAnimatedVectorDrawable
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
@@ -24,7 +22,7 @@ import com.example.trainerengine.R
 import com.example.trainerengine.SQL.GlobalSQLiteManager
 import com.example.trainerengine.SQL.SQLiteHelper
 import com.example.trainerengine.Session
-import com.example.trainerengine.getTimestamp
+import com.example.trainerengine.globalModules
 import com.example.trainerengine.module.ModuleTask
 import com.example.trainerengine.module.TaskFragment
 import com.example.trainerengine.module.TaskState
@@ -36,7 +34,7 @@ class SessionManager(sessionId: Int, private val activity: SessionViewer) {
     private var currentSession: Session
 
     init {
-        currentSession = Session(database.getSession(sessionId)!!, database)
+        currentSession = database.loadSession(sessionId)
     }
 
     fun submitAnswer() {
@@ -54,17 +52,15 @@ class SessionManager(sessionId: Int, private val activity: SessionViewer) {
             avd.start()
         }
 
-        val serializedAttempt = mapOf<String, Any>(
-            GlobalSQLiteManager.attemptID to database.getNewAttemptID(),
-            GlobalSQLiteManager.taskID to task.getTaskID(),
-            GlobalSQLiteManager.userAnswer to attempt.userAnswer.getUserAnswer().toString(),
-            GlobalSQLiteManager.judgment to judgement.isCorrect(),
-            GlobalSQLiteManager.timestamp to getTimestamp()
+        database.saveAttempt(
+            database.makeNewAttemptID(),
+            task.getTaskID(),
+            attempt.userAnswer.getUserAnswer().toString(),
+            judgement.isCorrect()
         )
-        database.saveAttempt(serializedAttempt)
         updatePoints(judgement.isCorrect())
 
-        if (!currentSession.getConfig().repeatable) {
+        if (!currentSession.getRepeatable()) {
             activity.getCurrentTask().setState(TaskState.LOCKED)
         }
         currentSession.answerTask()
@@ -75,10 +71,10 @@ class SessionManager(sessionId: Int, private val activity: SessionViewer) {
             if (answer) {
                 currentSession.setPoints(currentSession.getPoints() + 1)
             } else {
-                if (currentSession.getConfig().reset) {
+                if (currentSession.getReset()) {
                     currentSession.setPoints(0)
                 } else {
-                    currentSession.setPoints(currentSession.getPoints() - currentSession.getConfig().pointPenalty)
+                    currentSession.setPoints(currentSession.getPoints() - currentSession.getPointPenalty())
                 }
             }
         }
@@ -93,62 +89,26 @@ class SessionManager(sessionId: Int, private val activity: SessionViewer) {
     }
 
     fun makeTask(): ModuleTask {
-        val rand = (0 until currentSession.getModules().size).random()
-        val module = currentSession.getModules().elementAt(rand)
-        val taskID = database.getNewTaskID()
-        val config = database.getModuleConfig(0, module.getModuleID())
-        val task = module.makeTask(taskID, config)
-        val serializedTask = mapOf<String, Any>(
-            GlobalSQLiteManager.taskID to taskID,
-            GlobalSQLiteManager.moduleID to rand,
-            GlobalSQLiteManager.sessionID to currentSession.getSessionID(),
-            GlobalSQLiteManager.question to task.question().getQuestion(),
-            GlobalSQLiteManager.timestamp to getTimestamp()
-        )
-        database.saveTask(serializedTask)
+        val rand = (0 until currentSession.getConfigIDs().size).random()
+        val configID = currentSession.getConfigIDs().elementAt(rand)
+        val moduleID = database.loadModuleIDFromConfig(configID)
+        val module = globalModules[moduleID]!!
+        val taskID = database.makeNewTaskID()
+        val taskConfig = database.loadConfig(configID)
+        val task = module.makeTask(taskID, taskConfig)
+        database.saveTask(taskID, moduleID, currentSession.getSessionID(), task.question().getQuestion())
         for (answer in task.getAnswers()) {
-            val serializedAnswer = mapOf(
-                GlobalSQLiteManager.answerID to database.getNewAnswerID(),
-                GlobalSQLiteManager.taskID to taskID,
-                GlobalSQLiteManager.answer to answer.getAnswer(),
-                GlobalSQLiteManager.timestamp to getTimestamp()
-            )
-            database.saveAnswer(serializedAnswer)
+            database.saveAnswer(database.makeNewAnswerID(), taskID, answer.getAnswer())
         }
         return task
     }
 
-    fun deserializeTask(serializedTask: Map<String, Any>): ModuleTask {
-        if (currentSession.getModules().size < serializedTask["ModuleID"].toString().toInt()) {
-            throw Exception("ModuleID out of range")
-        }
-        val module = currentSession.getModules().elementAt(serializedTask["ModuleID"].toString().toInt())
-        val taskID = serializedTask[GlobalSQLiteManager.taskID] as Int
-        val question = serializedTask[GlobalSQLiteManager.question] as String
-
-        val answers = database.getAnswers(taskID)
-        val loadedAnswers = mutableListOf<Pair<Int, Any>>()
-        for (answer in answers) {
-            val answerID = answer[GlobalSQLiteManager.answerID].toString().toInt()
-            val correctAnswer = answer[GlobalSQLiteManager.answer]!!
-            loadedAnswers.add(Pair(answerID, correctAnswer))
-        }
-
-        val attempts = database.getAttempts(taskID)
-        val loadedAttempts = mutableListOf<Triple<Int, Any, Boolean>>()
-        if (attempts.isNotEmpty()) {
-            val attempt: Map<String, Any> = attempts.last()
-            val attemptID = attempt[GlobalSQLiteManager.attemptID].toString().toInt()
-            val userAnswer = attempt[GlobalSQLiteManager.userAnswer].toString()
-            val judgement = attempt[GlobalSQLiteManager.judgment].toString().toBoolean()
-            loadedAttempts.add(Triple(attemptID, userAnswer, judgement))
-        }
-
-        return module.deserializeTask(question, loadedAnswers, loadedAttempts, taskID)
+    fun getTaskByPosition(position: Int): ModuleTask {
+        return database.loadTasks(currentSession.getSessionID())[position]
     }
 
     fun getTargetPoints(): Int {
-        return currentSession.getConfig().targetPoints
+        return currentSession.getTargetPoints()
     }
 
     fun getPoints(): Int {
@@ -159,8 +119,8 @@ class SessionManager(sessionId: Int, private val activity: SessionViewer) {
         return currentSession.getAnsweredTaskAmount()
     }
 
-    fun getDatabase(): GlobalSQLiteManager {
-        return database
+    fun getAmountLoadedTasks(): Int {
+        return database.loadTasks(currentSession.getSessionID()).size
     }
 
     fun getCurrentSession(): Session {
@@ -174,10 +134,12 @@ class SessionViewer : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var correct: ImageView
     private lateinit var wrong: ImageView
+    private lateinit var correctAvd: SeekableAnimatedVectorDrawable
+    private lateinit var wrongAvd: SeekableAnimatedVectorDrawable
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.requestFeature(Window.FEATURE_ACTION_BAR);
+        window.requestFeature(Window.FEATURE_ACTION_BAR)
         setContentView(R.layout.activity_session_viewer)
         supportActionBar?.title = "Module Manager"
 
@@ -197,14 +159,29 @@ class SessionViewer : AppCompatActivity() {
 
         correct = findViewById(R.id.Correct)
         correct.setImageDrawable(SeekableAnimatedVectorDrawable.create(this, R.drawable.avd_correct))
+        correctAvd = correct.drawable as SeekableAnimatedVectorDrawable
         wrong = findViewById(R.id.Wrong)
         wrong.setImageDrawable(SeekableAnimatedVectorDrawable.create(this, R.drawable.avd_wrong))
+        wrongAvd = wrong.drawable as SeekableAnimatedVectorDrawable
+
+        if (sessionManager.getAmountLoadedTasks() != 0) {
+            val lastTaskPos = sessionManager.getAmountLoadedTasks() - 1
+            pager.setCurrentItem(lastTaskPos, false)
+            val task = sessionManager.getTaskByPosition(lastTaskPos)
+            if (task.getState() == TaskState.LOCKED) {
+                if (task.getCurrentAttempt().checkAnswer()!!.isCorrect()) {
+                    correctAvd.currentPlayTime = correctAvd.totalDuration
+                } else {
+                    wrongAvd.currentPlayTime = wrongAvd.totalDuration
+                }
+            }
+        }
 
         pager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 supportActionBar?.title = getCurrentTask().module().getStub().descriptionName
-                var correctAvd = correct.drawable as SeekableAnimatedVectorDrawable
+                val correctAvd = correct.drawable as SeekableAnimatedVectorDrawable
                 correctAvd.stop()
                 correctAvd.currentPlayTime = 0
                 val wrongAvd = wrong.drawable as SeekableAnimatedVectorDrawable
@@ -274,11 +251,10 @@ class SessionViewer : AppCompatActivity() {
         }
 
         override fun createFragment(position: Int): Fragment {
-            val loadedTasks = sessionManager.getDatabase().getTasks(sessionManager.getCurrentSession().getSessionID())
-            return if (position > loadedTasks.size - 1 || loadedTasks.isEmpty()) {
-                sessionManager.makeTask().fragment() as Fragment
+            return if (position > sessionManager.getAmountLoadedTasks() - 1) {
+                sessionManager.makeTask().fragment()
             } else {
-                sessionManager.deserializeTask(loadedTasks[position]).fragment() as Fragment
+                sessionManager.getTaskByPosition(position).fragment()
             }
         }
     }

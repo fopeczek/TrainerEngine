@@ -12,7 +12,7 @@ import com.example.trainerengine.module.*
 import java.lang.Math.*
 import kotlin.math.ln
 
-class PercentModule(stub: ModuleStub) : Module(stub,
+class PercentModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
     { module, question, answers, taskID, attempt -> PercentTask(module, question, answers, taskID, attempt) },
     { attempt, id, userAnswer, judgement -> PercentAttempt(attempt, id, userAnswer, judgement) },
     { text -> PercentQuestion(text) },
@@ -20,11 +20,13 @@ class PercentModule(stub: ModuleStub) : Module(stub,
     { attempt, loadedUserAnswer -> PercentUserAnswer(attempt, loadedUserAnswer) },
     { attempt, loadedJudgement -> PercentJudgment(attempt, loadedJudgement) },
     { task -> PercentFragment(task) }) {
-    
-    override fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask {
-        val rand = (0..100).random()
-        val question = "$rand%"
-        return PercentTask(this, PercentQuestion(question), listOf(PercentAnswer(0, rand)), taskID)
+
+    override fun makeTask(taskID: Int, config: ModuleConfig): ModuleTask {
+        val minValue = config.getConfigData("Min value")!!.getValue() as Int
+        val maxValue = config.getConfigData("Max value")!!.getValue() as Int
+        val value = (minValue..maxValue).random()
+        val question = "$value%"
+        return PercentTask(this, PercentQuestion(question), listOf(PercentAnswer(0, value)), taskID)
     }
 }
 
@@ -69,6 +71,8 @@ class PercentFragment(task: ModuleTask) : TaskFragment(task) {
         view = inflater.inflate(R.layout.module_percent, container, false)
 
         val answerInput = view.findViewById(R.id.PercentAnswer) as SeekBar
+        answerInput.progress=50
+        getTask().getCurrentAttempt().userAnswer.setUserAnswer(answerInput.progress)
         answerInput.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
             override fun onStopTrackingTouch(seekBar: SeekBar) {}
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
@@ -82,6 +86,9 @@ class PercentFragment(task: ModuleTask) : TaskFragment(task) {
     }
 
     override fun updateUI() {
+        if (!this::view.isInitialized) {
+            return
+        }
         val questionView = view.findViewById(R.id.PercentQuestion) as TextView
         val answerInput = view.findViewById(R.id.PercentAnswer) as SeekBar
 
@@ -100,11 +107,11 @@ class PercentFragment(task: ModuleTask) : TaskFragment(task) {
 
 class PercentModuleStub : ModuleStub() {
     override val descriptionName: String = "Percent Module"
-    override val databasePrefix: String = "Percent"
+    override val databaseName: String = "Percent"
     override val moduleDirectory: String = "PercentModule"
 
-    override fun createModule(): Module {
-        return PercentModule(this)
+    override fun createModule(moduleID: Int): Module {
+        return PercentModule(moduleID, this)
     }
 
     override fun getSkillSet(): SkillSet {

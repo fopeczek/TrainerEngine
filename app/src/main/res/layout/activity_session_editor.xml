@@ -28,72 +28,85 @@
             app:layout_constraintStart_toStartOf="parent"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             app:layout_constraintTop_toBottomOf="@+id/input_session_name"/>
-    <LinearLayout
+    <ExpandableListView
             android:orientation="vertical"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_marginTop="2dp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             app:layout_constraintTop_toBottomOf="@id/text_module_select" app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            android:id="@+id/list_modules"/>
-    <LinearLayout
-            android:orientation="horizontal"
+            android:id="@+id/list_modules" android:divider="@android:color/darker_gray" android:dividerHeight="0.5dp"
+            android:indicatorLeft="?attr/listPreferredItemPaddingLeft" android:layout_marginStart="64dp"
+            android:layout_marginEnd="64dp">
+    </ExpandableListView>
+    <ScrollView
             android:layout_width="0dp"
-            android:layout_height="wrap_content" app:layout_constraintTop_toBottomOf="@+id/list_modules"
-            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
-            android:gravity="center" app:layout_constraintHorizontal_bias="1.0" android:layout_marginTop="32dp"
-            android:id="@+id/linearLayout">
-        <TextView
-                android:text="Target score:"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:id="@+id/text_target"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large"
-                android:textSize="16sp"
-        />
-        <EditText
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:ems="2"
-                android:id="@+id/input_target"
-                android:minHeight="48dp" android:minWidth="48dp"/>
-    </LinearLayout>
-    <CheckBox
-            android:id="@+id/check_reset"
-            android:text="Reset after mistake"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout"/>
-    <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content" android:id="@+id/list_settings"
+            android:layout_height="0dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@+id/check_reset"
-            android:gravity="center">
-        <TextView
-                android:text="Point penalty for incorrect answer:"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:id="@+id/text_penalty"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large"
-                android:textSize="16sp"
-        />
-        <EditText
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:ems="2"
-                android:id="@+id/input_penalty"
-                android:minWidth="48dp" android:minHeight="48dp"/>
-    </LinearLayout>
-    <CheckBox
-            android:id="@+id/check_repeatable"
-            android:text="Can repeat answered question"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/list_settings"/>
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/done_session_create" android:layout_marginBottom="16dp"
+            app:layout_constraintTop_toBottomOf="@+id/list_modules" android:layout_marginTop="16dp">
+        <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+        >
+            <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:gravity="center_horizontal">
+                <TextView
+                        android:text="Target score:"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:id="@+id/text_target"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                        android:textSize="16sp"
+                />
+                <EditText
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:ems="2"
+                        android:id="@+id/input_target"
+                        android:minHeight="48dp" android:minWidth="48dp"
+                />
+            </LinearLayout>
+            <CheckBox
+                    android:id="@+id/checkbox_reset"
+                    android:text="Reset after mistake"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="10dp" android:paddingBottom="10dp"
+                    android:gravity="center|center_horizontal"/>
+            <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:gravity="center_horizontal">
+                <TextView
+                        android:text="Point penalty for incorrect answer:"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:id="@+id/text_penalty"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                        android:textSize="16sp"
+                />
+                <EditText
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:ems="2"
+                        android:id="@+id/input_penalty"
+                        android:minWidth="48dp" android:minHeight="48dp"
+                />
+            </LinearLayout>
+            <CheckBox
+                    android:id="@+id/checkbox_repeatable"
+                    android:text="Can repeat answered question"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+            />
+        </LinearLayout>
+    </ScrollView>
     <Button
             android:text="Done"
             android:layout_width="wrap_content"

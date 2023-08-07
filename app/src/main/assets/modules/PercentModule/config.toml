@@ -1,0 +1,11 @@
+multipleAnswers = false
+
+[[settings]]
+text = "Min value"
+type = "int"
+default = 0
+
+[[settings]]
+text = "Max value"
+type = "int"
+default = 100

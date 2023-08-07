@@ -1,125 +1,92 @@
 package com.example.trainerengine
 
 import com.example.trainerengine.SQL.GlobalSQLiteManager
-import com.example.trainerengine.module.Module
-import com.example.trainerengine.modules.MathModule.MathModuleStub
-import com.example.trainerengine.modules.PercentModule.PercentModuleStub
-import com.example.trainerengine.modules.PythonMathModule.PythonMathModuleStub
-
-data class SessionConfig(
-    var name: String = "",
-    var repeatable: Boolean = false,
-    var reset: Boolean = false,
-    var pointPenalty: Int = 2,
-    var targetPoints: Int = 10
-)
 
 class Session(
     private var sessionID: Int,
-    private var modules: MutableList<Module>,
-    private var config: SessionConfig,
     private var database: GlobalSQLiteManager,
+    private var configIDs: MutableList<Int> = mutableListOf(),
+    private var name: String = "Session $sessionID",
+    private var repeatable: Boolean = false,
+    private var reset: Boolean = false,
+    private var pointPenalty: Int = 2,
+    private var targetPoints: Int = 10,
     private var answeredTaskAmount: Int = 0,
     private var points: Int = 0
 ) {
-    constructor(serializedSession: Map<String, Any>, database: GlobalSQLiteManager) : this(
-        0, mutableListOf(), SessionConfig(), database
-    ) {
-        sessionID = serializedSession[GlobalSQLiteManager.sessionID] as Int
-        points = serializedSession[GlobalSQLiteManager.points] as Int
-        config.name = serializedSession[GlobalSQLiteManager.sessionName] as String
-        config.targetPoints = serializedSession[GlobalSQLiteManager.targetPoints] as Int
-        config.reset = serializedSession[GlobalSQLiteManager.reset].toString().toBoolean()
-        config.pointPenalty = serializedSession[GlobalSQLiteManager.penaltyPoints] as Int
-        config.repeatable = serializedSession[GlobalSQLiteManager.repeatable].toString().toBoolean()
-        answeredTaskAmount = database.getAmountOfAttemptedTasks(sessionID)
-        val modules = mutableListOf<Module>()
-        val serializedModules = (serializedSession[GlobalSQLiteManager.selectedModules] as String).split(",")
-        for (serializedModule in serializedModules) {
-            when (serializedModule) {
-                MathModuleStub().databasePrefix -> {
-                    for (module in globalModules) {
-                        if (module.getStub().databasePrefix == MathModuleStub().databasePrefix) {
-                            modules.add(module)
-                        }
-                    }
-                }
-                PercentModuleStub().databasePrefix -> {
-                    for (module in globalModules) {
-                        if (module.getStub().databasePrefix == PercentModuleStub().databasePrefix) {
-                            modules.add(module)
-                        }
-                    }
-                }
-                PythonMathModuleStub().databasePrefix -> {
-                    for (module in globalModules) {
-                        if (module.getStub().databasePrefix == PythonMathModuleStub().databasePrefix) {
-                            modules.add(module)
-                        }
-                    }
-                }
-            }
-        }
-        this.modules = modules
-    }
-
-//    fun serialize(): Map<String, Any> {
-//        val serializedModules = mutableListOf<String>()
-//        for (module in modules) {
-//            when (module.getStub().databasePrefix) {
-//                "Math" -> {
-//                    serializedModules.add("MathModule")
-//                }
-//
-//                "Percent" -> {
-//                    serializedModules.add("PercentModule")
-//                }
-//
-//                "Python" -> {
-//                    serializedModules.add("PythonMathModule")
-//                }
-//            }
-//        }
-//        val modules = serializedModules.joinToString(separator = ",")
-//        return mapOf(
-//            GlobalSQLiteManager.sessionID to sessionID,
-//            GlobalSQLiteManager.modules to modules,
-//            GlobalSQLiteManager.points to points,
-//            GlobalSQLiteManager.reset to config.reset,
-//            GlobalSQLiteManager.penaltyPoints to config.pointPenalty,
-//            GlobalSQLiteManager.targetPoints to config.targetPoints,
-//            GlobalSQLiteManager.repeatable to config.repeatable,
-//            GlobalSQLiteManager.timestamp to getTimestamp()
-//        )
-//    }
-
     fun answerTask() {
         answeredTaskAmount++
     }
 
     fun isFinished(): Boolean {
-        return points >= config.targetPoints
+        return points >= targetPoints
     }
 
-    fun getModules(): MutableList<Module> {
-        return modules
+    fun getConfigIDs(): MutableList<Int> {
+        return configIDs
+    }
+
+    fun setConfigIDs(configIDs: MutableList<Int>) {
+        this.configIDs = configIDs
+        database.updateSession(this)
     }
 
     fun getSessionID(): Int {
         return sessionID
     }
 
-    fun getConfig(): SessionConfig {
-        return config
+    fun getName(): String {
+        return name
     }
 
-//    fun setConfig(config: SessionConfig) {
-//        this.config = config
-//        database.updateSessionConfig(sessionID, config)
-//    }
+    fun setName(name: String) {
+        this.name = name
+        database.updateSession(this)
+    }
+
+    fun getRepeatable(): Boolean {
+        return repeatable
+    }
+
+    fun setRepeatable(repeatable: Boolean) {
+        this.repeatable = repeatable
+        database.updateSession(this)
+    }
+
+    fun getReset(): Boolean {
+        return reset
+    }
+
+    fun setReset(reset: Boolean) {
+        this.reset = reset
+        database.updateSession(this)
+    }
+
+    fun getPointPenalty(): Int {
+        return pointPenalty
+    }
+
+    fun setPointPenalty(pointPenalty: Int) {
+        this.pointPenalty = pointPenalty
+        database.updateSession(this)
+    }
+
+    fun getTargetPoints(): Int {
+        return targetPoints
+    }
+
+    fun setTargetPoints(targetPoints: Int) {
+        this.targetPoints = targetPoints
+        database.updateSession(this)
+    }
 
     fun getAnsweredTaskAmount(): Int {
         return answeredTaskAmount
+    }
+
+    fun setAnsweredTaskAmount(answeredTaskAmount: Int) {
+        this.answeredTaskAmount = answeredTaskAmount
+        database.updateSession(this)
     }
 
     fun getPoints(): Int {
@@ -131,6 +98,6 @@ class Session(
         if (this.points < 0) {
             this.points = 0
         }
-        database.updateSessionPoints(this.points, sessionID)
+        database.updateSession(this)
     }
 }

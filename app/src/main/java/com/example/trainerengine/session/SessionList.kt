@@ -17,14 +17,14 @@ import com.example.trainerengine.R
 import com.example.trainerengine.SQL.GlobalSQLiteManager
 import com.example.trainerengine.SQL.SQLiteHelper
 import com.example.trainerengine.Session
-import com.example.trainerengine.getTimestamp
 import com.example.trainerengine.globalModules
+import com.example.trainerengine.module.ConfigData
+import com.example.trainerengine.module.ModuleConfig
 import com.example.trainerengine.modules.MathModule.MathModuleStub
 import com.example.trainerengine.modules.PercentModule.PercentModuleStub
 import com.example.trainerengine.modules.PythonMathModule.PythonMathModuleStub
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.moandjiezana.toml.Toml
-import java.io.File
 
 class SessionList : AppCompatActivity() {
     private lateinit var sqLiteHelper: SQLiteHelper
@@ -55,115 +55,85 @@ class SessionList : AppCompatActivity() {
         sqLiteHelper = SQLiteHelper(applicationContext)
         database = GlobalSQLiteManager(sqLiteHelper)
 
-        val savedModules = database.getModules()
-        val toBeLoadedModules = mutableListOf("Math", "PythonMath", "Percent")
+        val loadedModules = database.loadModules()
+        val toBeLoadedModules = mutableListOf(
+            MathModuleStub().databaseName, PercentModuleStub().databaseName, PythonMathModuleStub().databaseName
+        ) // list of must be loaded modules
         globalModules.clear() // TODO: This is a hack to prevent modules from being added twice
-        for (module in savedModules) { // load saved modules
-            when (module[GlobalSQLiteManager.moduleName]) {
-                "Math" -> {
-                    globalModules.add(MathModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int))
-                    toBeLoadedModules.remove("Math")
-                }
-
-                "Percent" -> {
-                    globalModules.add(PercentModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int))
-                    toBeLoadedModules.remove("Percent")
-                }
-
-                "PythonMath" -> {
-                    globalModules.add(PythonMathModuleStub().createModule(module[GlobalSQLiteManager.moduleID] as Int))
-                    toBeLoadedModules.remove("PythonMath")
-                }
-            }
+        for (module in loadedModules) {
+            globalModules[module.getModuleID()] = module
+            toBeLoadedModules.remove(module.getStub().databaseName)
         }
 
-        for (moduleName in toBeLoadedModules) { // load remaining modules
+        for (moduleName in toBeLoadedModules) { // load and save unsaved modules
+            val moduleID = database.makeNewModuleID()
             when (moduleName) {
-                "Math" -> {
-                    val moduleID = database.getNewModuleID()
-                    val module = mapOf(
-                        GlobalSQLiteManager.moduleID to moduleID,
-                        GlobalSQLiteManager.moduleName to moduleName,
-                        GlobalSQLiteManager.timestamp to getTimestamp()
-                    )
-                    database.saveModule(module)
-                    globalModules.add(MathModuleStub().createModule(moduleID))
+                MathModuleStub().databaseName -> {
+                    globalModules[moduleID] = MathModuleStub().createModule(moduleID)
                 }
 
-                "Percent" -> {
-                    val moduleID = database.getNewModuleID()
-                    val module = mapOf(
-                        GlobalSQLiteManager.moduleID to moduleID,
-                        GlobalSQLiteManager.moduleName to moduleName,
-                        GlobalSQLiteManager.timestamp to getTimestamp()
-                    )
-                    database.saveModule(module)
-                    globalModules.add(PercentModuleStub().createModule(moduleID))
+                PercentModuleStub().databaseName -> {
+                    globalModules[moduleID] = PercentModuleStub().createModule(moduleID)
                 }
 
-                "PythonMath" -> {
-                    val moduleID = database.getNewModuleID()
-                    val module = mapOf(
-                        GlobalSQLiteManager.moduleID to moduleID,
-                        GlobalSQLiteManager.moduleName to moduleName,
-                        GlobalSQLiteManager.timestamp to getTimestamp()
-                    )
-                    database.saveModule(module)
-                    globalModules.add(PythonMathModuleStub().createModule(moduleID))
+                PythonMathModuleStub().databaseName -> {
+                    globalModules[moduleID] = PythonMathModuleStub().createModule(moduleID)
                 }
             }
+            database.saveModule(globalModules[moduleID]!!)
         }
 
-        for (module in globalModules) { // load modules config
+        for (module in globalModules.values) { // load modules config
             val configStream = assets.open("modules/${module.getStub().moduleDirectory}/config.toml")
-            val settings = mutableListOf<Triple<String, String, Any>>()
             val toml = Toml().read(configStream)
             if (toml.getList<Toml>("settings") == null) {
                 continue
             }
+
+            var configID = database.makeNewConfigID()
+            val defaultConfig = database.loadConfig(module.getModuleID(), "Default")
+            if (defaultConfig != null) {
+                configID = defaultConfig.getConfigID()
+            }
+            var savedConfigData = false
+            val config = ModuleConfig(configID, module.getModuleID(), "Default", mutableListOf())
             for (i in 0 until toml.getList<Toml>("settings").size) {
                 val setting = toml.getTable("settings[$i]")
+                var configData: ConfigData? = null
                 if (setting.getString("type") == "int") {
-                    settings.add(
-                        Triple(
-                            setting.getString(settingName),
-                            setting.getString(settingType),
-                            setting.getLong(settingDefault)
-                        )
+                    configData = ConfigData(
+                        configID, setting.getString(settingName), setting.getString(settingType), setting.getLong(settingDefault)
                     )
                 } else if (setting.getString("type") == "float") {
-                    settings.add(
-                        Triple(
-                            setting.getString(settingName),
-                            setting.getString(settingType),
-                            setting.getDouble(settingDefault)
-                        )
+                    configData = ConfigData(
+                        configID, setting.getString(settingName), setting.getString(settingType), setting.getDouble(settingDefault)
                     )
                 } else if (setting.getString("type") == "string") {
-                    settings.add(
-                        Triple(
-                            setting.getString(settingName),
-                            setting.getString(settingType),
-                            setting.getString(settingDefault)
-                        )
+                    configData = ConfigData(
+                        configID, setting.getString(settingName), setting.getString(settingType), setting.getString(settingDefault)
                     )
                 } else if (setting.getString("type") == "bool") {
-                    settings.add(
-                        Triple(
-                            setting.getString(settingName),
-                            setting.getString(settingType),
-                            setting.getBoolean(settingDefault)
-                        )
+                    configData = ConfigData(
+                        configID, setting.getString(settingName), setting.getString(settingType), setting.getBoolean(settingDefault)
                     )
                 }
+                if (configData != null) {
+                    if (database.loadConfigData(configData.getName(), configData.getType(), configData.getValue()) == null) {
+                        database.saveConfigData(configData)
+                        config.addConfigData(configData)
+                        savedConfigData = true
+                    }
+                }
             }
-            if (settings.size == 0) {
-                continue
+            if (savedConfigData) {
+                if (defaultConfig == null) {
+                    database.saveConfig(config)
+                }
             }
-            database.initializeModuleConfigTables(module.getModuleID(), settings)
         }
 
-        // INIT
+        // END - INIT
+
 
         val newSession = findViewById<FloatingActionButton>(R.id.addSession)
         newSession.setOnClickListener {
@@ -219,11 +189,10 @@ class SessionList : AppCompatActivity() {
         val sessionList = findViewById<LinearLayout>(R.id.session_list)
         sessionList.removeAllViews()
         invalidateOptionsMenu()
-        for (sessionData in database.getSessions()) {
-            val session = Session(sessionData, database)
+        for (session in database.loadSessions()) {
             val sessionCheck = CheckBox(this)
-            sessionCheck.text = session.getConfig().name
-            sessionCheck.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Large)
+            sessionCheck.text = session.getName()
+            sessionCheck.textSize = 22f
             sessionCheck.setOnClickListener {
                 onSessionCheck(session, sessionCheck)
             }
@@ -238,11 +207,10 @@ class SessionList : AppCompatActivity() {
         val sessionList = findViewById<LinearLayout>(R.id.session_list)
         sessionList.removeAllViews()
         invalidateOptionsMenu()
-        for (sessionData in database.getSessions()) {
-            val session = Session(sessionData, database)
+        for (session in database.loadSessions()) {
             val sessionText = TextView(this)
-            sessionText.text = session.getConfig().name
-            sessionText.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Large)
+            sessionText.text = session.getName()
+            sessionText.textSize = 22f
             if (session.isFinished()) {
                 sessionText.setTextColor(getColor(R.color.green))
             }

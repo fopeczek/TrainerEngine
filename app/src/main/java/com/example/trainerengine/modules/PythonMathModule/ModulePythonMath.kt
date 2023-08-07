@@ -11,7 +11,8 @@ import com.chaquo.python.Python
 import com.example.trainerengine.R
 import com.example.trainerengine.module.*
 
-class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
+class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
+    stub,
     { module, question, answers, taskID, attempt -> PythonMathTask(module, question, answers, taskID, attempt) },
     { attempt, id, userAnswer, judgement -> PythonMathAttempt(attempt, id, userAnswer, judgement) },
     { text -> PythonMathQuestion(text) },
@@ -21,15 +22,18 @@ class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
     { task -> PythonMathFragment(task) }) {
     val pythonModule = Python.getInstance().getModule("multiplyModule")
 
-    override fun makeTask(taskID: Int, selectedConfig: Map<String, Any>): ModuleTask {
-        val config = mutableListOf<Any>()
-        for (conf in selectedConfig){
-            config.add(conf.value)
+    override fun makeTask(taskID: Int, config: ModuleConfig): ModuleTask {
+        val serializedConfig = mutableListOf<Any>()
+        for (configData in config.getConfigData()) {
+            serializedConfig.add(configData.getValue())
         }
-        val questAns = pythonModule.callAttr("make_task", config).asList()
-        assert(questAns.size==2) //TODO replace with on init validation
+        val questAns = pythonModule.callAttr("make_task", serializedConfig).asList()
+        assert(questAns.size == 2) //TODO replace with on init validation
         return PythonMathTask(
-            this, PythonMathQuestion(questAns[0].toString()), listOf(PythonMathAnswer(1, questAns[1].toString())), taskID
+            this,
+            PythonMathQuestion(questAns[0].toString()),
+            listOf(PythonMathAnswer(1, questAns[1].toString())),
+            taskID
         )
     }
 }
@@ -112,7 +116,7 @@ class PythonMathFragment(task: ModuleTask) : TaskFragment(task) {
 
 class PythonMathModuleStub : ModuleStub() {
     override val descriptionName: String = "Python Math Module"
-    override val databasePrefix: String = "PythonMath"
+    override val databaseName: String = "PythonMath"
     override val moduleDirectory: String = "PythonMathModule"
 
     override fun createModule(moduleID: Int): Module {
