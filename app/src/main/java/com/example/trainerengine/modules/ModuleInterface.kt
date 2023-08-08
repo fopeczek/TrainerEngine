@@ -1,6 +1,7 @@
-package com.example.trainerengine.module
+package com.example.trainerengine.modules
 
 import androidx.fragment.app.Fragment
+import com.example.trainerengine.configs.ModuleConfig
 
 enum class TaskState {
     AWAITING, LOCKED,
@@ -55,7 +56,7 @@ abstract class ModuleTask(
     init {
         if (loadedAttempt != null) {
             currentAttempt = module.attemptFactory(this, loadedAttempt.first, loadedAttempt.second, loadedAttempt.third)
-            setState(TaskState.LOCKED)
+            setState(TaskState.LOCKED, false)
         } else {
             currentAttempt = module.attemptFactory(this, null, null, null)
         }
@@ -85,9 +86,11 @@ abstract class ModuleTask(
         return answers
     }
 
-    fun setState(newState: TaskState) {
+    fun setState(newState: TaskState, updateUI: Boolean = true) {
         state = newState
-        fragment.updateUI()
+        if (updateUI) {
+            fragment.updateUI()
+        }
     }
 
     fun getState(): TaskState {
@@ -181,7 +184,7 @@ abstract class TaskJudgment(protected val attempt: TaskAttempt, loadedJudgment: 
         return 0.0
     }
 
-    fun specificGrade(skill: Skill): Double {
+    fun specificGrade(@Suppress("UNUSED_PARAMETER") skill: Skill): Double {
         return 0.0
     }
 }

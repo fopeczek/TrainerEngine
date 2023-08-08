@@ -1,4 +1,4 @@
-package com.example.trainerengine.module
+package com.example.trainerengine.configs
 
 class ModuleConfig(
     private val configID: Int,

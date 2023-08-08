@@ -1,4 +1,4 @@
-package com.example.trainerengine.session
+package com.example.trainerengine.sessions
 
 import android.Manifest
 import android.content.Intent
@@ -14,12 +14,11 @@ import androidx.core.app.ActivityCompat
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.example.trainerengine.R
-import com.example.trainerengine.SQL.GlobalSQLiteManager
-import com.example.trainerengine.SQL.SQLiteHelper
-import com.example.trainerengine.Session
+import com.example.trainerengine.database.Database
+import com.example.trainerengine.database.QueryHelper
 import com.example.trainerengine.globalModules
-import com.example.trainerengine.module.ConfigData
-import com.example.trainerengine.module.ModuleConfig
+import com.example.trainerengine.configs.ConfigData
+import com.example.trainerengine.configs.ModuleConfig
 import com.example.trainerengine.modules.MathModule.MathModuleStub
 import com.example.trainerengine.modules.PercentModule.PercentModuleStub
 import com.example.trainerengine.modules.PythonMathModule.PythonMathModuleStub
@@ -27,8 +26,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.moandjiezana.toml.Toml
 
 class SessionList : AppCompatActivity() {
-    private lateinit var sqLiteHelper: SQLiteHelper
-    private lateinit var database: GlobalSQLiteManager
+    private lateinit var database: Database
 
     private val selectedSessions = mutableListOf<Session>()
 
@@ -52,8 +50,7 @@ class SessionList : AppCompatActivity() {
 
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 2)
 
-        sqLiteHelper = SQLiteHelper(applicationContext)
-        database = GlobalSQLiteManager(sqLiteHelper)
+        database = Database(QueryHelper(applicationContext))
 
         val loadedModules = database.loadModules()
         val toBeLoadedModules = mutableListOf(
@@ -193,6 +190,9 @@ class SessionList : AppCompatActivity() {
             val sessionCheck = CheckBox(this)
             sessionCheck.text = session.getName()
             sessionCheck.textSize = 22f
+            if (session.isFinished()) {
+                sessionCheck.setTextColor(getColor(R.color.green))
+            }
             sessionCheck.setOnClickListener {
                 onSessionCheck(session, sessionCheck)
             }
@@ -216,7 +216,7 @@ class SessionList : AppCompatActivity() {
             }
             sessionText.setOnClickListener {
                 val intent = Intent(this, SessionViewer::class.java)
-                intent.putExtra(GlobalSQLiteManager.sessionID, session.getSessionID())
+                intent.putExtra(Database.sessionID, session.getSessionID())
                 startActivity(intent)
             }
             sessionText.setOnLongClickListener {

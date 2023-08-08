@@ -1,11 +1,13 @@
-package com.example.trainerengine
+package com.example.trainerengine.sessions
 
-import com.example.trainerengine.SQL.GlobalSQLiteManager
+import com.example.trainerengine.database.Database
+import com.example.trainerengine.modules.ModuleTask
 
 class Session(
     private var sessionID: Int,
-    private var database: GlobalSQLiteManager,
+    private var database: Database,
     private var configIDs: MutableList<Int> = mutableListOf(),
+    private var tasks: MutableList<ModuleTask> = mutableListOf(),
     private var name: String = "Session $sessionID",
     private var repeatable: Boolean = false,
     private var reset: Boolean = false,
@@ -16,6 +18,7 @@ class Session(
 ) {
     fun answerTask() {
         answeredTaskAmount++
+        database.updateSession(this)
     }
 
     fun isFinished(): Boolean {
@@ -29,6 +32,14 @@ class Session(
     fun setConfigIDs(configIDs: MutableList<Int>) {
         this.configIDs = configIDs
         database.updateSession(this)
+    }
+
+    fun getTasks(): MutableList<ModuleTask> {
+        return tasks
+    }
+
+    fun addTask(task: ModuleTask) {
+        tasks.add(task)
     }
 
     fun getSessionID(): Int {
@@ -82,11 +93,6 @@ class Session(
 
     fun getAnsweredTaskAmount(): Int {
         return answeredTaskAmount
-    }
-
-    fun setAnsweredTaskAmount(answeredTaskAmount: Int) {
-        this.answeredTaskAmount = answeredTaskAmount
-        database.updateSession(this)
     }
 
     fun getPoints(): Int {

@@ -1,16 +1,12 @@
-package com.example.trainerengine.SQL
+package com.example.trainerengine.database
 
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import com.example.trainerengine.ColumnType
 import java.io.File
 
-
-enum class ColumnType {
-    INT, TEXT, BOOL, FLOAT, TIMESTAMP, BLOB
-}
-
-class SQLiteHelper(context: Context) {
+class QueryHelper(context: Context) {
     private var database: SQLiteDatabase
 
     init {

@@ -1,17 +1,18 @@
-package com.example.trainerengine.SQL
+package com.example.trainerengine.database
 
-import com.example.trainerengine.Session
+import com.example.trainerengine.ColumnType
+import com.example.trainerengine.sessions.Session
 import com.example.trainerengine.getTimestamp
 import com.example.trainerengine.globalModules
-import com.example.trainerengine.module.ConfigData
-import com.example.trainerengine.module.Module
-import com.example.trainerengine.module.ModuleConfig
-import com.example.trainerengine.module.ModuleTask
+import com.example.trainerengine.configs.ConfigData
+import com.example.trainerengine.modules.Module
+import com.example.trainerengine.configs.ModuleConfig
+import com.example.trainerengine.modules.ModuleTask
 import com.example.trainerengine.modules.MathModule.MathModuleStub
 import com.example.trainerengine.modules.PercentModule.PercentModuleStub
 import com.example.trainerengine.modules.PythonMathModule.PythonMathModuleStub
 
-class GlobalSQLiteManager(private val database: SQLiteHelper) {
+class Database(private val queryHelper: QueryHelper) {
     companion object {
         const val taskID = "TaskID"
         const val attemptID = "AttemptID"
@@ -67,7 +68,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
             repeatable to ColumnType.BOOL,
             timestamp to ColumnType.TIMESTAMP
         )
-        database.initializeTable(sessionsTable, columns)
+        queryHelper.initializeTable(sessionsTable, columns)
     }
 
     fun saveSession(session: Session) {
@@ -82,16 +83,16 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
             repeatable to session.getRepeatable(),
             timestamp to getTimestamp()
         )
-        database.insertRow(sessionsTable, data)
+        queryHelper.insertRow(sessionsTable, data)
     }
 
     fun loadSession(sessionID: Int): Session {
-        val data = database.getRow(sessionsTable, Companion.sessionID, sessionID)
+        val data = queryHelper.getRow(sessionsTable, Companion.sessionID, sessionID)
         return fillSessionFromMap(data)
     }
 
     fun loadSessions(): List<Session> {
-        val data = database.getAll(sessionsTable, true)
+        val data = queryHelper.getAll(sessionsTable, true)
         val sessions = mutableListOf<Session>()
         for (row in data) {
             sessions.add(fillSessionFromMap(row))
@@ -107,14 +108,13 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
             reset to session.getReset(),
             penaltyPoints to session.getPointPenalty(),
             targetPoints to session.getTargetPoints(),
-            repeatable to session.getRepeatable(),
-            timestamp to getTimestamp()
+            repeatable to session.getRepeatable()
         )
-        database.updateRow(sessionsTable, Companion.sessionID, session.getSessionID(), data)
+        queryHelper.updateRow(sessionsTable, sessionID, session.getSessionID(), data)
     }
 
     fun removeSession(sessionID: Int) {
-        database.removeRow(sessionsTable, Companion.sessionID, sessionID)
+        queryHelper.removeRow(sessionsTable, Companion.sessionID, sessionID)
         val tasks = loadTasks(sessionID)
         for (task in tasks) {
             removeTask(task.getTaskID())
@@ -122,21 +122,22 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
     }
 
     fun makeNewSessionID(): Int {
-        return database.makeNewID(sessionsTable, sessionID)
+        return queryHelper.makeNewID(sessionsTable, sessionID)
     }
 
     private fun fillSessionFromMap(data: Map<String, Any>): Session {
-        val sessionID = data[Companion.sessionID].toString().toInt()
-        val sessionName = data[Companion.sessionName].toString()
-        val configIDs = data[Companion.configIDs].toString().split(",").map { it.toInt() }.toMutableList()
-        val points = data[Companion.points].toString().toInt()
-        val targetPoints = data[Companion.targetPoints].toString().toInt()
-        val reset = data[Companion.reset].toString().toBoolean()
-        val pointPenalty = data[Companion.penaltyPoints] as Int
-        val repeatable = data[Companion.repeatable].toString().toBoolean()
+        val sessionID = data[sessionID].toString().toInt()
+        val sessionName = data[sessionName].toString()
+        val configIDs = data[configIDs].toString().split(",").map { it.toInt() }.toMutableList()
+        val points = data[points].toString().toInt()
+        val targetPoints = data[targetPoints].toString().toInt()
+        val reset = data[reset].toString().toBoolean()
+        val pointPenalty = data[penaltyPoints] as Int
+        val repeatable = data[repeatable].toString().toBoolean()
         val answeredTaskAmount = loadAmountOfAttemptedTasks(sessionID)
+        val tasks = loadTasks(sessionID)
         return Session(
-            sessionID, this, configIDs, sessionName, repeatable, reset, pointPenalty, targetPoints, answeredTaskAmount, points
+            sessionID, this, configIDs, tasks, sessionName, repeatable, reset, pointPenalty, targetPoints, answeredTaskAmount, points
         )
     }
 
@@ -144,24 +145,24 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         val columns = mutableMapOf(
             moduleID to ColumnType.INT, moduleName to ColumnType.TEXT, timestamp to ColumnType.TIMESTAMP
         )
-        database.initializeTable(modulesTable, columns)
+        queryHelper.initializeTable(modulesTable, columns)
     }
 
     fun saveModule(module: Module) {
         val data = mapOf(
-            Companion.moduleID to module.getModuleID(),
-            Companion.moduleName to module.getStub().databaseName,
-            Companion.timestamp to getTimestamp()
+            moduleID to module.getModuleID(),
+            moduleName to module.getStub().databaseName,
+            timestamp to getTimestamp()
         )
-        database.insertRow(modulesTable, data)
+        queryHelper.insertRow(modulesTable, data)
     }
 
     fun loadModules(): List<Module> {
-        val data = database.getAll(modulesTable, true)
+        val data = queryHelper.getAll(modulesTable, true)
         val modules = mutableListOf<Module>()
         for (row in data) {
-            val moduleID = row[Companion.moduleID] as Int
-            val moduleName = row[Companion.moduleName] as String
+            val moduleID = row[moduleID] as Int
+            val moduleName = row[moduleName] as String
             when (moduleName) {
                 MathModuleStub().databaseName -> {
                     modules.add(MathModuleStub().createModule(moduleID))
@@ -180,27 +181,27 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
     }
 
     fun makeNewModuleID(): Int {
-        return database.makeNewID(modulesTable, moduleID)
+        return queryHelper.makeNewID(modulesTable, moduleID)
     }
 
     private fun initializeConfigsTable() {
         val columns = mutableMapOf(
             configID to ColumnType.INT, configName to ColumnType.TEXT, moduleID to ColumnType.INT
         )
-        database.initializeTable(configsTable, columns)
+        queryHelper.initializeTable(configsTable, columns)
     }
 
     fun saveConfig(config: ModuleConfig) {
         val data = mapOf(
-            Companion.configID to config.getConfigID(), Companion.configName to config.getName(), Companion.moduleID to config.getModuleID()
+            configID to config.getConfigID(), configName to config.getName(), moduleID to config.getModuleID()
         )
-        database.insertRow(configsTable, data)
+        queryHelper.insertRow(configsTable, data)
     }
 
     fun loadConfig(configID: Int): ModuleConfig {
-        val data = database.getRow(configsTable, Companion.configID, configID)
-        val configName = data[Companion.configName] as String
-        val moduleID = data[Companion.moduleID] as Int
+        val data = queryHelper.getRow(configsTable, Companion.configID, configID)
+        val configName = data[configName] as String
+        val moduleID = data[moduleID] as Int
         val configData = loadConfigData(configID)
         return ModuleConfig(configID, moduleID, configName, configData)
     }
@@ -209,21 +210,34 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         val data = mapOf(
             Companion.configName to configName, Companion.moduleID to moduleID
         )
-        val result = database.getRow(configsTable, data)
+        val result = queryHelper.getRow(configsTable, data)
         if (result == null) {
             return null
         }
-        val configID = result[Companion.configID] as Int
+        val configID = result[configID] as Int
         val configData = loadConfigData(configID)
         return ModuleConfig(configID, moduleID, configName, configData)
     }
 
-    fun loadConfigs(moduleID: Int): MutableList<ModuleConfig> {
-        val data = database.getAllFiltered(configsTable, Companion.moduleID, moduleID)
+    fun loadConfigs(): MutableList<ModuleConfig> {
+        val data = queryHelper.getAll(configsTable)
         val configs = mutableListOf<ModuleConfig>()
         for (row in data) {
-            val configID = row[Companion.configID] as Int
-            val configName = row[Companion.configName] as String
+            val configID = row[configID] as Int
+            val configName = row[configName] as String
+            val moduleID = row[moduleID] as Int
+            val configData = loadConfigData(configID)
+            configs.add(ModuleConfig(configID, moduleID, configName, configData))
+        }
+        return configs
+    }
+
+    fun loadConfigs(moduleID: Int): MutableList<ModuleConfig> {
+        val data = queryHelper.getAllFiltered(configsTable, Companion.moduleID, moduleID)
+        val configs = mutableListOf<ModuleConfig>()
+        for (row in data) {
+            val configID = row[configID] as Int
+            val configName = row[configName] as String
             val configData = loadConfigData(configID)
             configs.add(ModuleConfig(configID, moduleID, configName, configData))
         }
@@ -231,33 +245,33 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
     }
 
     fun loadModuleIDFromConfig(configID: Int): Int {
-        val data = database.getRow(configsTable, Companion.configID, configID)
-        return data[Companion.moduleID] as Int
+        val data = queryHelper.getRow(configsTable, Companion.configID, configID)
+        return data[moduleID] as Int
     }
 
     fun makeNewConfigID(): Int {
-        return database.makeNewID(configsTable, configID)
+        return queryHelper.makeNewID(configsTable, configID)
     }
 
     private fun initializeConfigsDataTable() {
         val columns = mutableMapOf(
             configID to ColumnType.INT, configName to ColumnType.TEXT, configType to ColumnType.TEXT, configValue to ColumnType.TEXT
         )
-        database.initialize2KeyTable(configDataTable, columns)
+        queryHelper.initialize2KeyTable(configDataTable, columns)
     }
 
     fun saveConfigData(configData: ConfigData) {
         val data = mapOf(
-            Companion.configID to configData.getConfigID(),
-            Companion.configName to configData.getName(),
-            Companion.configType to configData.getType(),
-            Companion.configValue to configData.getValue().toString()
+            configID to configData.getConfigID(),
+            configName to configData.getName(),
+            configType to configData.getType(),
+            configValue to configData.getValue().toString()
         )
-        database.insertRow(configDataTable, data)
+        queryHelper.insertRow(configDataTable, data)
     }
 
     fun loadConfigData(): MutableList<ConfigData> {
-        val data = database.getAll(configDataTable)
+        val data = queryHelper.getAll(configDataTable)
         val configData = mutableListOf<ConfigData>()
         for (row in data) {
             configData.add(fillConfigDataFromMap(row)!!)
@@ -265,8 +279,8 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         return configData
     }
 
-    fun loadConfigData(configID: Int): MutableList<ConfigData> {
-        val data = database.getAllFiltered(configDataTable, Companion.configID, configID)
+    private fun loadConfigData(configID: Int): MutableList<ConfigData> {
+        val data = queryHelper.getAllFiltered(configDataTable, Companion.configID, configID)
         val configData = mutableListOf<ConfigData>()
         for (row in data) {
             configData.add(fillConfigDataFromMap(row)!!)
@@ -278,15 +292,11 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
         val data = mapOf(
             Companion.configName to configName, Companion.configType to configType, Companion.configValue to configValue.toString()
         )
-        val result = database.getRow(configDataTable, data)
+        val result = queryHelper.getRow(configDataTable, data)
         if (result == null) {
             return null
         }
         return fillConfigDataFromMap(result)
-    }
-
-    fun makeNewConfigDataID(): Int {
-        return database.makeNewID(configDataTable, configID)
     }
 
     private fun fillConfigDataFromMap(data: Map<String, Any>): ConfigData? {
@@ -327,7 +337,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
             question to ColumnType.TEXT,
             timestamp to ColumnType.TIMESTAMP
         )
-        database.initializeTable(taskTable, columns)
+        queryHelper.initializeTable(taskTable, columns)
     }
 
     fun saveTask(taskID: Int, moduleID: Int, sessionID: Int, question: String) {
@@ -336,19 +346,19 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
             Companion.moduleID to moduleID,
             Companion.sessionID to sessionID,
             Companion.question to question,
-            Companion.timestamp to getTimestamp()
+            timestamp to getTimestamp()
         )
-        database.insertRow(taskTable, data)
+        queryHelper.insertRow(taskTable, data)
     }
 
-    fun loadTasks(sessionID: Int): List<ModuleTask> {
-        val data = database.getAllFiltered(taskTable, Companion.sessionID, sessionID, true)
+    fun loadTasks(sessionID: Int): MutableList<ModuleTask> {
+        val data = queryHelper.getAllFiltered(taskTable, Companion.sessionID, sessionID, true)
         val tasks = mutableListOf<ModuleTask>()
         for (row in data) {
-            val moduleID = row[Companion.moduleID] as Int
+            val moduleID = row[moduleID] as Int
             val module = globalModules[moduleID]
-            val taskID = row[Companion.taskID] as Int
-            val question = row[Companion.question] as String
+            val taskID = row[taskID] as Int
+            val question = row[question] as String
             val answers = loadAnswers(taskID)
             val attempts = loadAttempts(taskID)
             val task = module!!.deserializeTask(question, answers, attempts, taskID)
@@ -358,13 +368,13 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
     }
 
     private fun removeTask(taskID: Int) {
-        database.removeRow(taskTable, Companion.taskID, taskID)
-        database.removeRow(attemptsTable, Companion.taskID, taskID)
-        database.removeRow(answersTable, Companion.taskID, taskID)
+        queryHelper.removeRow(taskTable, Companion.taskID, taskID)
+        queryHelper.removeRow(attemptsTable, Companion.taskID, taskID)
+        queryHelper.removeRow(answersTable, Companion.taskID, taskID)
     }
 
     fun makeNewTaskID(): Int {
-        return database.makeNewID(taskTable, taskID)
+        return queryHelper.makeNewID(taskTable, taskID)
     }
 
     private fun initializeAttemptsTable() {
@@ -375,7 +385,7 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
             judgment to ColumnType.BOOL,
             timestamp to ColumnType.TIMESTAMP
         )
-        database.initializeTable(attemptsTable, columns)
+        queryHelper.initializeTable(attemptsTable, columns)
     }
 
     fun saveAttempt(attemptID: Int, taskID: Int, userAnswer: String, judgment: Boolean) {
@@ -384,57 +394,57 @@ class GlobalSQLiteManager(private val database: SQLiteHelper) {
             Companion.taskID to taskID,
             Companion.userAnswer to userAnswer,
             Companion.judgment to judgment,
-            Companion.timestamp to getTimestamp()
+            timestamp to getTimestamp()
         )
-        database.insertRow(attemptsTable, data)
+        queryHelper.insertRow(attemptsTable, data)
     }
 
     private fun loadAttempts(taskID: Int): List<Triple<Int, Any, Boolean>> {
-        val data = database.getAllFiltered(attemptsTable, Companion.taskID, taskID, true)
+        val data = queryHelper.getAllFiltered(attemptsTable, Companion.taskID, taskID, true)
         val attempts = mutableListOf<Triple<Int, Any, Boolean>>()
         for (row in data) {
-            val attemptID = row[Companion.attemptID] as Int
-            val userAnswer = row[Companion.userAnswer] as String
-            val judgment = row[Companion.judgment] as Int == 1
+            val attemptID = row[attemptID] as Int
+            val userAnswer = row[userAnswer] as String
+            val judgment = row[judgment] as Int == 1
             attempts.add(Triple(attemptID, userAnswer, judgment))
         }
         return attempts
     }
 
-    fun loadAmountOfAttemptedTasks(sessionID: Int): Int {
-        return database.getAllByIDFromTable(attemptsTable, taskTable, taskID, Companion.sessionID, sessionID).size
+    private fun loadAmountOfAttemptedTasks(sessionID: Int): Int {
+        return queryHelper.getAllByIDFromTable(attemptsTable, taskTable, taskID, Companion.sessionID, sessionID).size
     }
 
     fun makeNewAttemptID(): Int {
-        return database.makeNewID(attemptsTable, attemptID)
+        return queryHelper.makeNewID(attemptsTable, attemptID)
     }
 
     private fun initializeAnswersTable() {
         val columns = mutableMapOf(
             answerID to ColumnType.INT, taskID to ColumnType.INT, answer to ColumnType.TEXT, timestamp to ColumnType.TIMESTAMP
         )
-        database.initializeTable(answersTable, columns)
+        queryHelper.initializeTable(answersTable, columns)
     }
 
     fun saveAnswer(answerID: Int, taskID: Int, answer: String) {
         val data = mapOf(
-            Companion.answerID to answerID, Companion.taskID to taskID, Companion.answer to answer, Companion.timestamp to getTimestamp()
+            Companion.answerID to answerID, Companion.taskID to taskID, Companion.answer to answer, timestamp to getTimestamp()
         )
-        database.insertRow(answersTable, data)
+        queryHelper.insertRow(answersTable, data)
     }
 
     private fun loadAnswers(taskID: Int): List<Pair<Int, String>> {
-        val data = database.getAllFiltered(answersTable, Companion.taskID, taskID, true)
+        val data = queryHelper.getAllFiltered(answersTable, Companion.taskID, taskID, true)
         val answers = mutableListOf<Pair<Int, String>>()
         for (row in data) {
-            val answerID = row[Companion.answerID] as Int
-            val answer = row[Companion.answer] as String
+            val answerID = row[answerID] as Int
+            val answer = row[answer] as String
             answers.add(Pair(answerID, answer))
         }
         return answers
     }
 
     fun makeNewAnswerID(): Int {
-        return database.makeNewID(answersTable, answerID)
+        return queryHelper.makeNewID(answersTable, answerID)
     }
 }

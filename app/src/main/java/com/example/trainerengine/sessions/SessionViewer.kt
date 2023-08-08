@@ -1,14 +1,14 @@
-package com.example.trainerengine.session
+package com.example.trainerengine.sessions
 
+import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.view.Menu
-import android.view.Window
+import android.os.CountDownTimer
+import android.view.*
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.ProgressBar
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -19,22 +19,24 @@ import androidx.viewpager2.widget.ViewPager2
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.example.trainerengine.R
-import com.example.trainerengine.SQL.GlobalSQLiteManager
-import com.example.trainerengine.SQL.SQLiteHelper
-import com.example.trainerengine.Session
+import com.example.trainerengine.database.Database
+import com.example.trainerengine.database.QueryHelper
+import com.example.trainerengine.confettiOnFinishSession
 import com.example.trainerengine.globalModules
-import com.example.trainerengine.module.ModuleTask
-import com.example.trainerengine.module.TaskFragment
-import com.example.trainerengine.module.TaskState
+import com.example.trainerengine.modules.ModuleTask
+import com.example.trainerengine.modules.TaskFragment
+import com.example.trainerengine.modules.TaskState
 
 class SessionManager(sessionId: Int, private val activity: SessionViewer) {
-    private val sqLiteHelper: SQLiteHelper = SQLiteHelper(activity.baseContext)
-    private val database: GlobalSQLiteManager = GlobalSQLiteManager(sqLiteHelper)
+    private val database: Database = Database(QueryHelper(activity.baseContext))
 
     private var currentSession: Session
 
     init {
         currentSession = database.loadSession(sessionId)
+        if (currentSession.getTasks().size == 0 || (currentSession.getAnsweredTaskAmount() == currentSession.getTasks().size && !currentSession.isFinished())) {
+            makeTask()
+        }
     }
 
     fun submitAnswer() {
@@ -45,25 +47,27 @@ class SessionManager(sessionId: Int, private val activity: SessionViewer) {
         val attempt = task.getCurrentAttempt()
         val judgement = attempt.checkAnswer()!!
         if (judgement.isCorrect()) {
-            val avd = activity.getCorrectDrawable() as SeekableAnimatedVectorDrawable
-            avd.start()
+            activity.playCorrectAnimation()
         } else {
-            val avd = activity.getWrongDrawable() as SeekableAnimatedVectorDrawable
-            avd.start()
+            activity.playWrongAnimation()
         }
 
         database.saveAttempt(
-            database.makeNewAttemptID(),
-            task.getTaskID(),
-            attempt.userAnswer.getUserAnswer().toString(),
-            judgement.isCorrect()
+            database.makeNewAttemptID(), task.getTaskID(), attempt.userAnswer.getUserAnswer().toString(), judgement.isCorrect()
         )
-        updatePoints(judgement.isCorrect())
+
+        currentSession.answerTask()
 
         if (!currentSession.getRepeatable()) {
             activity.getCurrentTask().setState(TaskState.LOCKED)
+            activity.onTaskAnswered()
         }
-        currentSession.answerTask()
+
+        updatePoints(judgement.isCorrect())
+
+        if (!currentSession.isFinished()) {
+            makeTask()
+        }
     }
 
     private fun updatePoints(answer: Boolean?) {
@@ -81,14 +85,29 @@ class SessionManager(sessionId: Int, private val activity: SessionViewer) {
         activity.setUserProgress(currentSession.getPoints())
 
         if (currentSession.isFinished()) {
-            Toast.makeText(activity, "Done!", Toast.LENGTH_LONG).show()
-            val intent = Intent(activity, SessionList::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            activity.startActivity(intent)
+            activity.onSessionFinished()
+
+            val keyboardTimer = object : CountDownTimer(500, 500) {
+                override fun onTick(millisUntilFinished: Long) {}
+                override fun onFinish() {
+                    confettiOnFinishSession(activity)
+                }
+            }
+            keyboardTimer.start()
+
+            val timer = object : CountDownTimer(3000, 3000) {
+                override fun onTick(millisUntilFinished: Long) {}
+                override fun onFinish() {
+                    val intent = Intent(activity, SessionList::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    activity.startActivity(intent)
+                }
+            }
+            timer.start()
         }
     }
 
-    fun makeTask(): ModuleTask {
+    private fun makeTask(): ModuleTask {
         val rand = (0 until currentSession.getConfigIDs().size).random()
         val configID = currentSession.getConfigIDs().elementAt(rand)
         val moduleID = database.loadModuleIDFromConfig(configID)
@@ -96,6 +115,7 @@ class SessionManager(sessionId: Int, private val activity: SessionViewer) {
         val taskID = database.makeNewTaskID()
         val taskConfig = database.loadConfig(configID)
         val task = module.makeTask(taskID, taskConfig)
+        currentSession.addTask(task)
         database.saveTask(taskID, moduleID, currentSession.getSessionID(), task.question().getQuestion())
         for (answer in task.getAnswers()) {
             database.saveAnswer(database.makeNewAnswerID(), taskID, answer.getAnswer())
@@ -132,6 +152,7 @@ class SessionViewer : AppCompatActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var pager: ViewPager2
     private lateinit var progressBar: ProgressBar
+    private lateinit var submitButton: Button
     private lateinit var correct: ImageView
     private lateinit var wrong: ImageView
     private lateinit var correctAvd: SeekableAnimatedVectorDrawable
@@ -147,7 +168,7 @@ class SessionViewer : AppCompatActivity() {
             Python.start(AndroidPlatform(this))
         }
 
-        val sessionId = intent.getIntExtra(GlobalSQLiteManager.sessionID, -1)
+        val sessionId = intent.getIntExtra(Database.sessionID, -1)
         if (sessionId == -1) {
             throw Exception("Session ID not found")
         }
@@ -164,6 +185,21 @@ class SessionViewer : AppCompatActivity() {
         wrong.setImageDrawable(SeekableAnimatedVectorDrawable.create(this, R.drawable.avd_wrong))
         wrongAvd = wrong.drawable as SeekableAnimatedVectorDrawable
 
+        submitButton = findViewById(R.id.Submit)
+        submitButton.setOnClickListener { sessionManager.submitAnswer() }
+
+//        val viewTreeObserver: ViewTreeObserver = submitButton.viewTreeObserver
+//        if (viewTreeObserver.isAlive) {
+//            viewTreeObserver.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
+//                override fun onGlobalLayout() {
+//                    submitButton.viewTreeObserver.removeOnGlobalLayoutListener(this)
+//                    if (sessionManager.getCurrentSession().isFinished()) {
+//                        confettiFinishSession(this@SessionViewer)
+//                    }
+//                }
+//            })
+//        }
+
         if (sessionManager.getAmountLoadedTasks() != 0) {
             val lastTaskPos = sessionManager.getAmountLoadedTasks() - 1
             pager.setCurrentItem(lastTaskPos, false)
@@ -174,6 +210,7 @@ class SessionViewer : AppCompatActivity() {
                 } else {
                     wrongAvd.currentPlayTime = wrongAvd.totalDuration
                 }
+                submitButton.isEnabled = false
             }
         }
 
@@ -188,31 +225,38 @@ class SessionViewer : AppCompatActivity() {
                 wrongAvd.stop()
                 wrongAvd.currentPlayTime = 0
                 if (getCurrentTask().getState() == TaskState.LOCKED) {
-                    findViewById<Button>(R.id.Submit).isEnabled = false
+                    submitButton.isEnabled = false
                     if (getCurrentTask().getCurrentAttempt().checkAnswer()!!.isCorrect()) {
                         correctAvd.currentPlayTime = correctAvd.totalDuration
                     } else {
                         wrongAvd.currentPlayTime = wrongAvd.totalDuration
                     }
                 } else {
-                    findViewById<Button>(R.id.Submit).isEnabled = true
+                    submitButton.isEnabled = true
                 }
             }
         })
-
-        findViewById<Button>(R.id.Submit).setOnClickListener { sessionManager.submitAnswer() }
 
         progressBar = findViewById(R.id.Points)
         progressBar.max = sessionManager.getTargetPoints()
         progressBar.progress = sessionManager.getPoints()
     }
 
-    fun getCorrectDrawable(): Drawable {
-        return correct.drawable
+    fun playCorrectAnimation() {
+        correctAvd.start()
     }
 
-    fun getWrongDrawable(): Drawable {
-        return wrong.drawable
+    fun playWrongAnimation() {
+        wrongAvd.start()
+    }
+
+    fun onTaskAnswered() {
+        submitButton.isEnabled = false
+    }
+
+    fun onSessionFinished() {
+        val imm: InputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(submitButton.windowToken, 0)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -220,15 +264,16 @@ class SessionViewer : AppCompatActivity() {
         return true
     }
 
-//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-//        if (item.itemId == R.id.sessionSettings){
-//            val intent = Intent(this, SessionEditor::class.java)
-//            intent.putExtra(GlobalSQLiteManager.sessionID, sessionManager.getCurrentSession().getSessionID())
-//            startActivity(intent)
-//            return true
-//        }
-//        return super.onOptionsItemSelected(item)
-//    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.sessionSettings) {
+            val intent = Intent(this, SessionEditor::class.java)
+            intent.putExtra(Database.sessionID, sessionManager.getCurrentSession().getSessionID())
+            startActivity(intent)
+            finish()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
 
     fun getCurrentTask(): ModuleTask {
         val taskFragment = supportFragmentManager.findFragmentByTag("f" + pager.currentItem)!! as TaskFragment
@@ -251,11 +296,7 @@ class SessionViewer : AppCompatActivity() {
         }
 
         override fun createFragment(position: Int): Fragment {
-            return if (position > sessionManager.getAmountLoadedTasks() - 1) {
-                sessionManager.makeTask().fragment()
-            } else {
-                sessionManager.getTaskByPosition(position).fragment()
-            }
+            return sessionManager.getTaskByPosition(position).fragment()
         }
     }
 }

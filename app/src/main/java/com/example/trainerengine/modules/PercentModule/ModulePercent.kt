@@ -1,3 +1,5 @@
+@file:Suppress("ReplaceJavaStaticMethodWithKotlinAnalog")
+
 package com.example.trainerengine.modules.PercentModule
 
 import android.os.Bundle
@@ -8,7 +10,8 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
 import com.example.trainerengine.R
-import com.example.trainerengine.module.*
+import com.example.trainerengine.configs.ModuleConfig
+import com.example.trainerengine.modules.*
 import java.lang.Math.*
 import kotlin.math.ln
 
@@ -52,7 +55,7 @@ class PercentJudgment(attempt: TaskAttempt, loadedJudgment: Boolean?) : TaskJudg
     override fun checkAnswer() {
         var x = attempt.userAnswer.getUserAnswer().toString().toDouble() / 100.0
         val userLogIntAnswer = ln(x / (1 - x))
-        x = attempt.task().getAnswers()[0].getAnswer().toString().toDouble() / 100.0
+        x = attempt.task().getAnswers()[0].getAnswer().toDouble() / 100.0
         x = x / 0.999 + 0.0005
         val logIntAnswer = ln(x / (1 - x))
         val scoreContinuous = abs(logIntAnswer - userLogIntAnswer)
@@ -71,8 +74,9 @@ class PercentFragment(task: ModuleTask) : TaskFragment(task) {
         view = inflater.inflate(R.layout.module_percent, container, false)
 
         val answerInput = view.findViewById(R.id.PercentAnswer) as SeekBar
-        answerInput.progress=50
-        getTask().getCurrentAttempt().userAnswer.setUserAnswer(answerInput.progress)
+        if (getTask().getCurrentAttempt().userAnswer.getUserAnswer() == null) {
+            getTask().getCurrentAttempt().userAnswer.setUserAnswer(50)
+        }
         answerInput.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
             override fun onStopTrackingTouch(seekBar: SeekBar) {}
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
@@ -86,16 +90,11 @@ class PercentFragment(task: ModuleTask) : TaskFragment(task) {
     }
 
     override fun updateUI() {
-        if (!this::view.isInitialized) {
-            return
-        }
         val questionView = view.findViewById(R.id.PercentQuestion) as TextView
         val answerInput = view.findViewById(R.id.PercentAnswer) as SeekBar
 
-        questionView.text = getTask().question().getQuestion().toString()
-        if (getTask().getCurrentAttempt().userAnswer.getUserAnswer() != null) {
-            answerInput.progress = getTask().getCurrentAttempt().userAnswer.getUserAnswer().toString().toInt()
-        }
+        questionView.text = getTask().question().getQuestion()
+        answerInput.progress = getTask().getCurrentAttempt().userAnswer.getUserAnswer()!!.toString().toInt()
 
         if (getTask().getState() == TaskState.AWAITING) {
             answerInput.isEnabled = true

@@ -8,7 +8,8 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.core.widget.addTextChangedListener
 import com.example.trainerengine.R
-import com.example.trainerengine.module.*
+import com.example.trainerengine.configs.ModuleConfig
+import com.example.trainerengine.modules.*
 
 class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     stub,
@@ -21,16 +22,8 @@ class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     { task -> MathFragment(task) }) {
 
     override fun makeTask(taskID: Int, config: ModuleConfig): ModuleTask {
-        var maxVal = config.getConfigData("Max value")!!.getValue()
-        if (maxVal == null) {
-            maxVal = 50 //TODO replace with assert (Error couldn't find Max value config)
-        } else {
-            maxVal = maxVal as Int
-        }
-        var doNeg = config.getConfigData("Do negation")!!.getValue()
-        if (doNeg == null) {
-            doNeg = true //TODO replace with assert (Error couldn't find Do negation config)
-        }
+        val maxVal = config.getConfigData("Max value")!!.getValue() as Int
+        val doNeg = config.getConfigData("Do negation")!!.getValue()
         val rand1 = (0..maxVal).random()
         val rand2 = (0..maxVal).random()
         var neg = (0..1).random()
@@ -78,13 +71,18 @@ class MathJudgment(attempt: TaskAttempt, loadedJudgment: Boolean?) : TaskJudgmen
 
 class MathFragment(task: ModuleTask) : TaskFragment(task) {
     private lateinit var view: View
+    private lateinit var answerInput: EditText
+    private lateinit var answerPreview: TextView
+    private lateinit var questionView: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         view = inflater.inflate(R.layout.module_math, container, false)
 
-        val answerInput = view.findViewById(R.id.MathAnswer) as EditText
+        answerPreview = view.findViewById(R.id.MathPreview) as TextView
+        questionView = view.findViewById(R.id.MathQuestion) as TextView
+        answerInput = view.findViewById(R.id.MathAnswer) as EditText
         answerInput.addTextChangedListener { text ->
             if (text.toString() == "" || text.toString() == "-") {
                 getTask().getCurrentAttempt().userAnswer.setUserAnswer(null)
@@ -99,13 +97,6 @@ class MathFragment(task: ModuleTask) : TaskFragment(task) {
     }
 
     override fun updateUI() {
-        if (!this::view.isInitialized) {
-            return
-        }
-        val answerPreview = view.findViewById(R.id.MathPreview) as TextView
-        val questionView = view.findViewById(R.id.MathQuestion) as TextView
-        val answerInput = view.findViewById(R.id.MathAnswer) as EditText
-
         questionView.text = getTask().question().getQuestion().toString()
         val userAnswer = getTask().getCurrentAttempt().userAnswer.getUserAnswer()
         if (userAnswer != null) {

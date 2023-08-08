@@ -1,7 +1,7 @@
 package com.example.trainerengine
 
 import android.icu.text.DateFormat
-import com.example.trainerengine.module.Module
+import com.example.trainerengine.modules.Module
 import java.util.*
 
 val globalModules = mutableMapOf<Int, Module>() // ModuleID -> Module
@@ -18,4 +18,8 @@ fun getModule(moduleName: String): Module {
 fun getTimestamp(): String {
     val dateFormat = DateFormat.getDateTimeInstance()
     return dateFormat.format(Date())
+}
+
+enum class ColumnType {
+    INT, TEXT, BOOL, FLOAT, TIMESTAMP, BLOB
 }

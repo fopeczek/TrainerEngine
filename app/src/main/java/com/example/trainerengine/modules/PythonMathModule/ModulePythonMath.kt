@@ -9,7 +9,8 @@ import android.widget.TextView
 import androidx.core.widget.addTextChangedListener
 import com.chaquo.python.Python
 import com.example.trainerengine.R
-import com.example.trainerengine.module.*
+import com.example.trainerengine.configs.ModuleConfig
+import com.example.trainerengine.modules.*
 
 class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     stub,
@@ -69,13 +70,18 @@ class PythonMathJudgment(attempt: TaskAttempt, loadedJudgment: Boolean?) : TaskJ
 
 class PythonMathFragment(task: ModuleTask) : TaskFragment(task) {
     private lateinit var view: View
+    private lateinit var answerInput: EditText
+    private lateinit var answerPreview: TextView
+    private lateinit var questionView: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         view = inflater.inflate(R.layout.module_math, container, false)
 
-        val answerInput = view.findViewById(R.id.MathAnswer) as EditText
+        answerPreview = view.findViewById(R.id.MathPreview) as TextView
+        questionView = view.findViewById(R.id.MathQuestion) as TextView
+        answerInput = view.findViewById(R.id.MathAnswer) as EditText
         answerInput.addTextChangedListener { text ->
             if (text.toString() == "" || text.toString() == "-") {
                 getTask().getCurrentAttempt().userAnswer.setUserAnswer(null)
@@ -90,13 +96,6 @@ class PythonMathFragment(task: ModuleTask) : TaskFragment(task) {
     }
 
     override fun updateUI() {
-        if (!this::view.isInitialized) {
-            return
-        }
-        val answerPreview = view.findViewById(R.id.MathPreview) as TextView
-        val questionView = view.findViewById(R.id.MathQuestion) as TextView
-        val answerInput = view.findViewById(R.id.MathAnswer) as EditText
-
         questionView.text = getTask().question().getQuestion()
         val userAnswer = getTask().getCurrentAttempt().userAnswer.getUserAnswer()
         if (userAnswer != null) {
