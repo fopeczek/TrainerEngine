@@ -92,7 +92,7 @@ class SessionList : AppCompatActivity() {
             if (defaultConfig != null) {
                 configID = defaultConfig.getConfigID()
             }
-            var savedConfigData = false
+            var savedNewConfigData = false
             val config = ModuleConfig(configID, module.getModuleID(), "Default", mutableListOf())
             for (i in 0 until toml.getList<Toml>("settings").size) {
                 val setting = toml.getTable("settings[$i]")
@@ -115,14 +115,14 @@ class SessionList : AppCompatActivity() {
                     )
                 }
                 if (configData != null) {
-                    if (database.loadConfigData(configData.getName(), configData.getType(), configData.getValue()) == null) {
+                    if (!database.isConfigDataSaved(configData)) {
                         database.saveConfigData(configData)
                         config.addConfigData(configData)
-                        savedConfigData = true
+                        savedNewConfigData = true
                     }
                 }
             }
-            if (savedConfigData) {
+            if (savedNewConfigData) {
                 if (defaultConfig == null) {
                     database.saveConfig(config)
                 }

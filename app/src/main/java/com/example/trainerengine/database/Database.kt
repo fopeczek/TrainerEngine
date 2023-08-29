@@ -150,9 +150,7 @@ class Database(private val queryHelper: QueryHelper) {
 
     fun saveModule(module: Module) {
         val data = mapOf(
-            moduleID to module.getModuleID(),
-            moduleName to module.getStub().databaseName,
-            timestamp to getTimestamp()
+            moduleID to module.getModuleID(), moduleName to module.getStub().databaseName, timestamp to getTimestamp()
         )
         queryHelper.insertRow(modulesTable, data)
     }
@@ -288,15 +286,18 @@ class Database(private val queryHelper: QueryHelper) {
         return configData
     }
 
-    fun loadConfigData(configName: String, configType: String, configValue: Any): ConfigData? {
+    fun isConfigDataSaved(configData: ConfigData): Boolean {
         val data = mapOf(
-            Companion.configName to configName, Companion.configType to configType, Companion.configValue to configValue.toString()
+            configID to configData.getConfigID(),
+            configName to configData.getName(),
+            configType to configData.getType(),
+            configValue to configData.getValue().toString()
         )
         val result = queryHelper.getRow(configDataTable, data)
         if (result == null) {
-            return null
+            return false
         }
-        return fillConfigDataFromMap(result)
+        return true
     }
 
     private fun fillConfigDataFromMap(data: Map<String, Any>): ConfigData? {
