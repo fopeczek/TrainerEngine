@@ -13,7 +13,7 @@ import com.example.trainerengine.modules.*
 
 class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     stub,
-    { module, question, answers, taskID, attempt -> MathTask(module, question, answers, taskID, attempt) },
+    { module, question, answers, taskID, config, attempt -> MathTask(module, question, answers, taskID, config, attempt) },
     { attempt, id, userAnswer, judgement -> MathAttempt(attempt, id, userAnswer, judgement) },
     { text -> MathQuestion(text) },
     { id, text -> MathAnswer(id, text.toInt()) },
@@ -40,7 +40,7 @@ class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
         } else {
             rand1 + rand2
         }
-        return MathTask(this, MathQuestion(question), listOf(MathAnswer(1, answer)), taskID)
+        return MathTask(this, MathQuestion(question), listOf(MathAnswer(1, answer)), taskID, config)
     }
 }
 
@@ -49,8 +49,9 @@ class MathTask(
     question: TaskQuestion,
     answers: List<TaskAnswer>,
     taskID: Int,
+    config: ModuleConfig,
     loadedAttempt: Triple<Int, Any, Boolean>? = null
-) : ModuleTask(module, question, answers, taskID, loadedAttempt)
+) : ModuleTask(module, question, answers, taskID, config, loadedAttempt)
 
 class MathAttempt(
     task: ModuleTask, loadedAttemptID: Int? = null, loadedUserAnswer: Any? = null, loadedJudgment: Boolean? = null
@@ -97,7 +98,7 @@ class MathFragment(task: ModuleTask) : TaskFragment(task) {
     }
 
     override fun updateUI() {
-        questionView.text = getTask().question().getQuestion().toString()
+        questionView.text = getTask().getQuestion().getQuestion().toString()
         val userAnswer = getTask().getCurrentAttempt().userAnswer.getUserAnswer()
         if (userAnswer != null) {
             answerInput.setText(userAnswer.toString())

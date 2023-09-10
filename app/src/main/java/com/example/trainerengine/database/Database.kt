@@ -335,17 +335,19 @@ class Database(private val queryHelper: QueryHelper) {
             taskID to ColumnType.INT,
             moduleID to ColumnType.INT,
             sessionID to ColumnType.INT,
+            configID to ColumnType.INT,
             question to ColumnType.TEXT,
             timestamp to ColumnType.TIMESTAMP
         )
         queryHelper.initializeTable(taskTable, columns)
     }
 
-    fun saveTask(taskID: Int, moduleID: Int, sessionID: Int, question: String) {
+    fun saveTask(taskID: Int, moduleID: Int, sessionID: Int, configID: Int, question: String) {
         val data = mapOf(
             Companion.taskID to taskID,
             Companion.moduleID to moduleID,
             Companion.sessionID to sessionID,
+            Companion.configID to configID,
             Companion.question to question,
             timestamp to getTimestamp()
         )
@@ -362,7 +364,8 @@ class Database(private val queryHelper: QueryHelper) {
             val question = row[question] as String
             val answers = loadAnswers(taskID)
             val attempts = loadAttempts(taskID)
-            val task = module!!.deserializeTask(question, answers, attempts, taskID)
+            val config = loadConfig(row[configID] as Int)
+            val task = module!!.deserializeTask(question, answers, attempts, taskID, config)
             tasks.add(task)
         }
         return tasks

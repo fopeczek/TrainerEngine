@@ -116,7 +116,7 @@ class SessionManager(sessionId: Int, private val activity: SessionViewer) {
         val taskConfig = database.loadConfig(configID)
         val task = module.makeTask(taskID, taskConfig)
         currentSession.addTask(task)
-        database.saveTask(taskID, moduleID, currentSession.getSessionID(), task.question().getQuestion())
+        database.saveTask(taskID, moduleID, currentSession.getSessionID(), configID, task.getQuestion().getQuestion())
         for (answer in task.getAnswers()) {
             database.saveAnswer(database.makeNewAnswerID(), taskID, answer.getAnswer())
         }

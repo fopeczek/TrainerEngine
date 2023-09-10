@@ -10,7 +10,7 @@ enum class TaskState {
 abstract class Module(
     private val moduleID: Int,
     private val stub: ModuleStub,
-    val taskFactory: (Module, TaskQuestion, List<TaskAnswer>, Int, Triple<Int, Any, Boolean>?) -> ModuleTask,
+    val taskFactory: (Module, TaskQuestion, List<TaskAnswer>, Int, ModuleConfig, Triple<Int, Any, Boolean>?) -> ModuleTask,
     val attemptFactory: (ModuleTask, Int?, Any?, Boolean?) -> TaskAttempt,
     val questionFactory: (String) -> TaskQuestion,
     val answerFactory: (Int, String) -> TaskAnswer,
@@ -32,13 +32,14 @@ abstract class Module(
         question: String,
         answers: List<Pair<Int, Any>>,
         attempts: List<Triple<Int, Any, Boolean>>,
-        taskID: Int
+        taskID: Int,
+        config: ModuleConfig
     ): ModuleTask {
         val answersList = mutableListOf<TaskAnswer>()
         for (answer in answers) {
             answersList.add(answerFactory(answer.first, answer.second.toString()))
         }
-        return taskFactory(this, questionFactory(question), answersList, taskID, attempts.lastOrNull())
+        return taskFactory(this, questionFactory(question), answersList, taskID, config, attempts.lastOrNull())
     }
 }
 
@@ -47,6 +48,7 @@ abstract class ModuleTask(
     private val question: TaskQuestion,
     private val answers: List<TaskAnswer>,
     private val taskID: Int,
+    private val config: ModuleConfig,
     loadedAttempt: Triple<Int, Any, Boolean>?
 ) {
     private var currentAttempt: TaskAttempt
@@ -78,7 +80,11 @@ abstract class ModuleTask(
         return currentAttempt
     }
 
-    fun question(): TaskQuestion {
+    fun getConfig(): ModuleConfig {
+        return config
+    }
+
+    fun getQuestion(): TaskQuestion {
         return question
     }
 

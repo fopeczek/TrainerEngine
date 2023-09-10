@@ -9,3 +9,8 @@ default = 0
 text = "Max value"
 type = "int"
 default = 30
+
+[[settings]]
+text = "Threshold"
+type = "float"
+default = 0.5

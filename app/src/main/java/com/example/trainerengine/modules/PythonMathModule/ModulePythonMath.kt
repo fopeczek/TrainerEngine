@@ -11,11 +11,10 @@ import com.chaquo.python.Python
 import com.example.trainerengine.R
 import com.example.trainerengine.configs.ModuleConfig
 import com.example.trainerengine.modules.*
-import java.util.Vector
 
 class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     stub,
-    { module, question, answers, taskID, attempt -> PythonMathTask(module, question, answers, taskID, attempt) },
+    { module, question, answers, taskID, config, attempt -> PythonMathTask(module, question, answers, taskID, config, attempt) },
     { attempt, id, userAnswer, judgement -> PythonMathAttempt(attempt, id, userAnswer, judgement) },
     { text -> PythonMathQuestion(text) },
     { id, text -> PythonMathAnswer(id, text) },
@@ -27,12 +26,7 @@ class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     override fun makeTask(taskID: Int, config: ModuleConfig): ModuleTask {
         val task = pythonModule.callAttr("make_task", config).asList()
         assert(task.size == 3) //TODO replace with on init validation
-        return PythonMathTask(
-            this,
-            PythonMathQuestion(task[0].toString()),
-            listOf(PythonMathAnswer(1, task[1].toString())),
-            taskID
-        )
+        return PythonMathTask(this, PythonMathQuestion(task[0].toString()), listOf(PythonMathAnswer(1, task[1].toString())), taskID, config)
     }
 }
 
@@ -41,8 +35,9 @@ class PythonMathTask(
     question: TaskQuestion,
     answers: List<TaskAnswer>,
     taskID: Int,
+    config: ModuleConfig,
     loadedAttempt: Triple<Int, Any, Boolean>? = null
-) : ModuleTask(module, question, answers, taskID, loadedAttempt)
+) : ModuleTask(module, question, answers, taskID, config, loadedAttempt)
 
 class PythonMathAttempt(
     task: ModuleTask, loadedAttemptID: Int? = null, loadedUserAnswer: Any? = null, loadedJudgment: Boolean? = null
@@ -59,8 +54,10 @@ class PythonMathJudgment(attempt: TaskAttempt, loadedJudgment: Boolean?) : TaskJ
         val module = attempt.task().module() as PythonMathModule
         judgement = module.pythonModule.callAttr(
             "check_answer",
-            attempt.task().getAnswers().first().getAnswer(),
-            attempt.userAnswer.getUserAnswer().toString()
+            attempt.task().getQuestion().getQuestion(),
+            attempt.task().getAnswers().first().getAnswer().toString().toInt(),
+            attempt.userAnswer.getUserAnswer().toString().toInt(),
+            attempt.task().getConfig()
         ).toBoolean()
     }
 }
@@ -93,7 +90,7 @@ class PythonMathFragment(task: ModuleTask) : TaskFragment(task) {
     }
 
     override fun updateUI() {
-        questionView.text = getTask().question().getQuestion()
+        questionView.text = getTask().getQuestion().getQuestion()
         val userAnswer = getTask().getCurrentAttempt().userAnswer.getUserAnswer()
         if (userAnswer != null) {
             answerInput.setText(userAnswer.toString())

@@ -16,7 +16,7 @@ import java.lang.Math.*
 import kotlin.math.ln
 
 class PercentModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
-    { module, question, answers, taskID, attempt -> PercentTask(module, question, answers, taskID, attempt) },
+    { module, question, answers, taskID, config, attempt -> PercentTask(module, question, answers, taskID, config, attempt) },
     { attempt, id, userAnswer, judgement -> PercentAttempt(attempt, id, userAnswer, judgement) },
     { text -> PercentQuestion(text) },
     { id, text -> PercentAnswer(id, text.toInt()) },
@@ -29,7 +29,7 @@ class PercentModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
         val maxValue = config.getConfigData("Max value")!!.getValue() as Int
         val value = (minValue..maxValue).random()
         val question = "$value%"
-        return PercentTask(this, PercentQuestion(question), listOf(PercentAnswer(0, value)), taskID)
+        return PercentTask(this, PercentQuestion(question), listOf(PercentAnswer(0, value)), taskID, config)
     }
 }
 
@@ -38,8 +38,9 @@ class PercentTask(
     question: TaskQuestion,
     answers: List<TaskAnswer>,
     taskID: Int,
+    config: ModuleConfig,
     loadedAttemptID: Triple<Int, Any, Boolean>? = null
-) : ModuleTask(module, question, answers, taskID, loadedAttemptID)
+) : ModuleTask(module, question, answers, taskID, config, loadedAttemptID)
 
 class PercentAttempt(
     task: ModuleTask, loadedAttemptID: Int? = null, loadedUserAnswer: Any? = null, loadedJudgment: Boolean? = null
@@ -93,7 +94,7 @@ class PercentFragment(task: ModuleTask) : TaskFragment(task) {
         val questionView = view.findViewById(R.id.PercentQuestion) as TextView
         val answerInput = view.findViewById(R.id.PercentAnswer) as SeekBar
 
-        questionView.text = getTask().question().getQuestion()
+        questionView.text = getTask().getQuestion().getQuestion()
         answerInput.progress = getTask().getCurrentAttempt().userAnswer.getUserAnswer()!!.toString().toInt()
 
         if (getTask().getState() == TaskState.AWAITING) {

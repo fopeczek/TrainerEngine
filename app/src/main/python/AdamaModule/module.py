@@ -40,15 +40,7 @@ def skill_list() -> dict[str, str]:
     return ans
 
 
-@dataclass
-class QuestionType:
-    """
-    Defines a dictionary of types required to store a question.
-    """
-    first_operand: int
-    second_operand: int
-    operator: str
-
+QuestionType = str
 
 judgement_descriptions = {
     "error_in_units": "Error in units part of the result",
@@ -129,8 +121,10 @@ def calc_score(judgement: JudgmentType, correct: AnswerType, skills: list[str]) 
 ModuleConfig = java.jclass("com.example.trainerengine.configs.ModuleConfig")
 ConfigData = java.jclass("com.example.trainerengine.configs.ConfigData")
 
+
 def make_task(
-              config: ModuleConfig, positive_skills: list[str]=[], negative_skills: list[str]=[]) -> Optional[tuple[QuestionType, AnswerType, list[str]]]:
+        config: ModuleConfig, positive_skills: list[str] = [], negative_skills: list[str] = []) -> Optional[
+    tuple[QuestionType, AnswerType, list[str]]]:
     """Returns a tuple representing the question, that was randomized according to the given skills,
     the correct answer and the list effective skills that are tested.
     or None if no question could be randomized.
@@ -218,12 +212,57 @@ def make_task(
     else:
         correct = operand1 + operand2
 
-    question = QuestionType(first_operand=operand1, second_operand=operand2, operator="-" if flag_subtract else "+")
-    answer = AnswerType(answer=correct)
+    question = f"{operand1}-{operand2}="
+    if not flag_subtract:
+        question = f"{operand1}+{operand2}="
+    answer = correct
 
-    skills = _infer_skills(question, answer)
+    skills = []
 
     return (question, answer, skills)
+
+
+def is_answer_passed(scalar_score: float, threshold: float) -> bool:
+    return scalar_score > threshold
+
+
+def score_judgement(judgement: JudgmentType, correct: int,
+                    skills: list[str] = []) -> tuple[float, dict[str, tuple[float, float]]]:
+    """
+    Calculates the score of the given judgment.
+    Returns the scalar score plus descriptive information about the scores
+    """
+    description = {}
+
+    if "overflow10" in skills or "underflow10" in skills:
+        answer_weight = 6
+        mistake_weight = 3
+    else:
+        if "twodigit" in skills:
+            answer_weight = 4
+            mistake_weight = 2
+        else:
+            answer_weight = 2
+            mistake_weight = 1
+
+    description["units"] = ((answer_weight * (judgement.score_in_units > 0.5)), answer_weight)
+    if judgement.score_in_tens is not None:
+        description["tens"] = ((answer_weight * (judgement.score_in_tens > 0.5)), answer_weight)
+
+    if judgement.score_in_sign is not None:
+        description["sign"] = ((mistake_weight * (judgement.score_in_sign > 0.5)), mistake_weight)
+
+    if judgement.score_in_ordering is not None:
+        description["units"] = ((mistake_weight * (judgement.score_in_ordering > 0.5)), mistake_weight)
+
+    if judgement.score_in_operand is not None:
+        description["operand"] = ((mistake_weight * (judgement.score_in_operand > 0.5)), mistake_weight)
+
+    weight = sum([x[1] for x in description.values()])
+    sum_points = sum([x[0] for x in description.values()])
+    description["overall"] = (sum_points, weight)
+
+    return (sum_points / weight), description
 
 
 def _infer_skills(question: QuestionType, answer: AnswerType) -> list[str]:
@@ -256,51 +295,76 @@ def _infer_skills(question: QuestionType, answer: AnswerType) -> list[str]:
     return skills
 
 
-def check_answer(answer: Any, user_answer: Any) -> bool:
+def check_answer(question: str, answer: int, correct: int, config: ModuleConfig) -> bool:
+    judgement = check_answer_calc(question, answer, correct)
+    score, _ = score_judgement(judgement, correct)
+    if score < config.getConfigData("Threshold").getValue():
+        return False
+    else:
+        return True
+
+
+def parse_arithmetic_question(question: str)->tuple[int, str, int]:
+    """
+    :param question: question in the format of "2+4" or "5-4". We support only "+" and "-" operators.
+    :return: A tuple containing the two operands (as int) and the operator character.
+    """
+
+    question = question.replace('=', '')
+    ans = question.split("+")
+    if len(ans) == 2:
+        return int(ans[0]), "+", int(ans[1])
+    ans = question.split("-")
+    if len(ans) == 2:
+        return int(ans[0]), "-", int(ans[1])
+    raise Exception(f"Question {question} is not in the format of '2+4' or '5-4'")
+
+def check_answer_calc(question: str, answer: int, correct: int, skills: list[str] = []) -> JudgmentType:
     """Returns True if the answer is correct, False otherwise."""
     ans = JudgmentType()
 
-    correct_p = question.first_operand + question.second_operand
-    correct_m = question.first_operand - question.second_operand
-    correct_m2 = question.second_operand - question.first_operand
+    operation = parse_arithmetic_question(question)
+    correct_p = operation[0] + operation[2]
+    correct_m = operation[0] - operation[2]
+    correct_m2 = operation[2] - operation[0]
 
-    if question.operator == "+":
+    if operation[1] == "+":
         correct = correct_p
     else:
         correct = correct_m
 
-    if -9 <= correct <= 9 and question.operator == "+":
+    if -9 <= correct <= 9 and operation[1] == "+":
         ans.score_in_tens = None
-    if (question.operator == "-" and question.first_operand > question.second_operand) or question.operator == "+":
+    if (operation[1] == "-" and operation[0] > operation[2]) or operation[1] == "+":
         ans.score_in_sign = None
 
-    if question.operator == "+":
+    if operation[1] == "+":
         ans.score_in_ordering = None
 
     correct_digit1 = correct % 10
     correct_digit2 = correct // 10
 
-    ans_p_digit1 = answer.answer % 10
-    ans_p_digit2 = answer.answer // 10
+    ans_p_digit1 = answer % 10
+    ans_p_digit2 = answer // 10
 
     # Simple case: check if the sign is correct
-    if (answer.answer > 0) != (correct > 0):
+    if (answer > 0) != (correct > 0):
         ans.score_in_sign = 0.
 
     # Check if the answer is correct but maybe to the wrong sign or ordering
-    if question.operator == "+":
-        if correct_p == answer.answer:
+    if operation[1] == "+":
+        if correct_p == answer:
             return ans  # All is correct
-        if correct_m == answer.answer:
+        if correct_m == answer:
             ans.score_in_operand = 0.  # The wrong sign, but otherwise ok
             return ans
-    if question.operator == "-":
-        if correct_m == answer.answer:
+    if operation[1] == "-":
+        if correct_m == answer:
             return ans
-        if correct_p == answer.answer:
+        if correct_p == answer:
             ans.score_in_operand = 0.
             return ans
-        if correct_m2 == answer.answer:
+        if correct_m2 == answer:
             ans.score_in_ordering = 0.
             return ans
 
