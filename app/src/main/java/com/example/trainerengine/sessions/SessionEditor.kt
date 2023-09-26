@@ -16,20 +16,26 @@ import com.example.trainerengine.modules.Module
 class SessionEditor : AppCompatActivity() {
     private lateinit var database: Database
     private lateinit var session: Session
-    private var configs = mutableListOf<ModuleConfig>()
     private var newSession = false
 
-    private lateinit var sessionName: EditText
-    private lateinit var penalty: EditText
-    private lateinit var target: EditText
-    private lateinit var repeatable: CheckBox
-    private lateinit var reset: CheckBox
-    private lateinit var moduleList: ExpandableListView
+    private var sessionName = ""
+    private var penalty = 0
+    private var target = 0
+    private var repeatable = false
+    private var reset = false
+    private var configs = mutableListOf<ModuleConfig>()
+
+    private lateinit var sessionNameInput: EditText
+    private lateinit var penaltyInput: EditText
+    private lateinit var targetInput: EditText
+    private lateinit var repeatableInput: CheckBox
+    private lateinit var resetInput: CheckBox
+    private lateinit var configList: ExpandableListView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_session_editor)
 
+        setContentView(R.layout.activity_session_module_selector)
         database = Database(QueryHelper(applicationContext))
 
         if (intent.hasExtra(Database.sessionID)) {
@@ -41,18 +47,15 @@ class SessionEditor : AppCompatActivity() {
             newSession = true
         }
 
-        moduleList = findViewById(R.id.list_modules)
-        sessionName = findViewById(R.id.input_session_name)
-        penalty = findViewById(R.id.input_penalty)
-        target = findViewById(R.id.input_target)
-        repeatable = findViewById(R.id.checkbox_repeatable)
-        reset = findViewById(R.id.checkbox_reset)
+        penalty = session.getPointPenalty()
+        target = session.getTargetPoints()
+        repeatable = session.getRepeatable()
+        reset = session.getReset()
 
-        sessionName.setText(session.getName())
-        penalty.setText(session.getPointPenalty().toString())
-        target.setText(session.getTargetPoints().toString())
-        repeatable.isChecked = session.getRepeatable()
-        reset.isChecked = session.getReset()
+        configList = findViewById(R.id.list_modules)
+        sessionNameInput = findViewById(R.id.input_session_name)
+
+        sessionNameInput.setText(session.getName())
 
         for (configID in session.getConfigIDs()) {
             configs.add(database.loadConfig(configID))
@@ -69,10 +72,10 @@ class SessionEditor : AppCompatActivity() {
         }
 
         val adapter = ModuleConfigAdapter(this, allConfigs, selectedConfigs) { checkBox, config -> onConfigClicked(checkBox, config) }
-        moduleList.setAdapter(adapter)
+        configList.setAdapter(adapter)
 
-        val done = findViewById<Button>(R.id.done_session_create)
-        done.setOnClickListener { onDone() }
+        val next = findViewById<Button>(R.id.next_session_create)
+        next.setOnClickListener { onNext() }
     }
 
     private fun onConfigClicked(checkBox: CheckBox, config: ModuleConfig) {
@@ -88,24 +91,102 @@ class SessionEditor : AppCompatActivity() {
         }
     }
 
+    private fun onBack() {
+        sessionName = sessionNameInput.text.toString()
+        if (penaltyInput.text.toString() == "" || targetInput.text.toString() == "") {
+            return
+        }
+        penalty = penaltyInput.text.toString().toInt()
+        target = targetInput.text.toString().toInt()
+        repeatable = repeatableInput.isChecked
+        reset = resetInput.isChecked
+
+        setContentView(R.layout.activity_session_module_selector)
+        configList = findViewById(R.id.list_modules)
+        sessionNameInput = findViewById(R.id.input_session_name)
+
+        sessionNameInput.setText(sessionName)
+        for (configID in session.getConfigIDs()) {
+            configs.add(database.loadConfig(configID))
+        }
+
+        val allConfigs: MutableMap<Module, MutableList<ModuleConfig>> = mutableMapOf()
+        val selectedConfigs: MutableMap<Module, MutableList<ModuleConfig>> = mutableMapOf()
+        for (module in globalModules.values) {
+            allConfigs[module] = database.loadConfigs(module.getModuleID())
+            selectedConfigs[module] = mutableListOf()
+        }
+        for (config in configs) {
+            selectedConfigs[globalModules[config.getModuleID()]]!!.add(config)
+        }
+
+        val adapter = ModuleConfigAdapter(this, allConfigs, selectedConfigs) { checkBox, config -> onConfigClicked(checkBox, config) }
+        configList.setAdapter(adapter)
+
+        val next = findViewById<Button>(R.id.next_session_create)
+        next.setOnClickListener { onNext() }
+    }
+
+    private fun onNext() {
+        if (configs.size == 0) {
+            return
+        }
+        sessionName = sessionNameInput.text.toString()
+
+        setContentView(R.layout.activity_session_settings)
+        sessionNameInput = findViewById(R.id.input_session_name2)
+        penaltyInput = findViewById(R.id.input_penalty)
+        targetInput = findViewById(R.id.input_target)
+        repeatableInput = findViewById(R.id.checkbox_repeatable)
+        resetInput = findViewById(R.id.checkbox_reset)
+        resetInput.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                penaltyInput.isEnabled = false
+                findViewById<TextView>(R.id.text_penalty).isEnabled = false
+            } else {
+                penaltyInput.isEnabled = true
+                findViewById<TextView>(R.id.text_penalty).isEnabled = true
+            }
+        }
+
+        sessionNameInput.setText(sessionName)
+        penaltyInput.setText(penalty.toString())
+        targetInput.setText(target.toString())
+        repeatableInput.isChecked = repeatable
+        resetInput.isChecked = reset
+
+        val back = findViewById<Button>(R.id.back_session_create)
+        back.setOnClickListener { onBack() }
+        val done = findViewById<Button>(R.id.done_session_create)
+        done.setOnClickListener { onDone() }
+    }
+
     private fun onDone() {
-        if (sessionName.text.toString() == "" || configs.size == 0 || penalty.text.toString() == "" || target.text.toString() == "") {
+        if (penaltyInput.text.toString() == "" || targetInput.text.toString() == "") {
+            return
+        }
+        sessionName = sessionNameInput.text.toString()
+        penalty = penaltyInput.text.toString().toInt()
+        target = targetInput.text.toString().toInt()
+        repeatable = repeatableInput.isChecked
+        reset = resetInput.isChecked
+        if (sessionName == "" || configs.size == 0) {
             return
         }
 
-        if (target.text.toString().toInt() < 1) {
+        if (targetInput.text.toString().toInt() < 1) {
             return
         }
 
-        if (penalty.text.toString().toInt() < 0) {
+        if (penaltyInput.text.toString().toInt() < 0) {
             return
         }
 
-        if (target.text.toString().toInt() <= penalty.text.toString().toInt()) {
+        if (targetInput.text.toString().toInt() <= penaltyInput.text.toString().toInt()) {
             return
         }
 
-        if (target.text.toString().toInt() <= session.getPoints()) {
+        if (targetInput.text.toString().toInt() <= session.getPoints()) {
             return
         }
 
@@ -113,11 +194,12 @@ class SessionEditor : AppCompatActivity() {
             database.saveSession(session)
         }
 
-        session.setName(sessionName.text.toString())
-        session.setPointPenalty(penalty.text.toString().toInt())
-        session.setTargetPoints(target.text.toString().toInt())
-        session.setRepeatable(repeatable.isChecked)
-        session.setReset(reset.isChecked)
+        session.setName(sessionNameInput.text.toString())
+        session.setPointPenalty(penaltyInput.text.toString().toInt())
+        session.setTargetPoints(targetInput.text.toString().toInt())
+        session.setRepeatable(repeatableInput.isChecked)
+        session.setReset(resetInput.isChecked)
+
         val configIDs = mutableListOf<Int>()
         for (config in configs) {
             configIDs.add(config.getConfigID())

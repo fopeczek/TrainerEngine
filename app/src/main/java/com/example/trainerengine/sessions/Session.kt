@@ -3,7 +3,7 @@ package com.example.trainerengine.sessions
 import com.example.trainerengine.database.Database
 import com.example.trainerengine.modules.ModuleTask
 
-class Session(
+class Session( //Here are the defaults for session creation
     private var sessionID: Int,
     private var database: Database,
     private var configIDs: MutableList<Int> = mutableListOf(),
