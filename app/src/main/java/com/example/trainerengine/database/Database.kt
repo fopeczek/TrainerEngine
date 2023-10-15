@@ -201,7 +201,7 @@ class Database(private val queryHelper: QueryHelper) {
         val configName = data[configName] as String
         val moduleID = data[moduleID] as Int
         val configData = loadConfigData(configID)
-        return ModuleConfig(configID, moduleID, configName, configData)
+        return ModuleConfig(configID, moduleID, this, configName, configData)
     }
 
     fun loadConfig(moduleID: Int, configName: String): ModuleConfig? {
@@ -214,7 +214,7 @@ class Database(private val queryHelper: QueryHelper) {
         }
         val configID = result[configID] as Int
         val configData = loadConfigData(configID)
-        return ModuleConfig(configID, moduleID, configName, configData)
+        return ModuleConfig(configID, moduleID, this, configName, configData)
     }
 
     fun loadConfigs(): MutableList<ModuleConfig> {
@@ -225,7 +225,7 @@ class Database(private val queryHelper: QueryHelper) {
             val configName = row[configName] as String
             val moduleID = row[moduleID] as Int
             val configData = loadConfigData(configID)
-            configs.add(ModuleConfig(configID, moduleID, configName, configData))
+            configs.add(ModuleConfig(configID, moduleID, this, configName, configData))
         }
         return configs
     }
@@ -237,7 +237,7 @@ class Database(private val queryHelper: QueryHelper) {
             val configID = row[configID] as Int
             val configName = row[configName] as String
             val configData = loadConfigData(configID)
-            configs.add(ModuleConfig(configID, moduleID, configName, configData))
+            configs.add(ModuleConfig(configID, moduleID, this, configName, configData))
         }
         return configs
     }
@@ -245,6 +245,16 @@ class Database(private val queryHelper: QueryHelper) {
     fun loadModuleIDFromConfig(configID: Int): Int {
         val data = queryHelper.getRow(configsTable, Companion.configID, configID)
         return data[moduleID] as Int
+    }
+
+    fun updateConfig(config: ModuleConfig) {
+        val data = mapOf(
+            configName to config.getName()
+        )
+        queryHelper.updateRow(configsTable, configID, config.getConfigID(), data)
+        for (configData in config.getConfigData()) {
+            updateConfigData(configData)
+        }
     }
 
     fun makeNewConfigID(): Int {
@@ -284,6 +294,15 @@ class Database(private val queryHelper: QueryHelper) {
             configData.add(fillConfigDataFromMap(row)!!)
         }
         return configData
+    }
+
+    private fun updateConfigData(configData: ConfigData) {
+        val data = mapOf(
+            configName to configData.getName(),
+            configType to configData.getType(),
+            configValue to configData.getValue()
+        )
+        queryHelper.updateRow(configDataTable, configID, configData.getConfigID(), data)
     }
 
     fun isConfigDataSaved(configData: ConfigData): Boolean {

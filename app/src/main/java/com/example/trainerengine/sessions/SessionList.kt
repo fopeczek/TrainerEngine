@@ -93,7 +93,7 @@ class SessionList : AppCompatActivity() {
                 configID = defaultConfig.getConfigID()
             }
             var savedNewConfigData = false
-            val config = ModuleConfig(configID, module.getModuleID(), "Default", mutableListOf())
+            val config = ModuleConfig(configID, module.getModuleID(), database, "Default", mutableListOf())
             for (i in 0 until toml.getList<Toml>("settings").size) {
                 val setting = toml.getTable("settings[$i]")
                 var configData: ConfigData? = null

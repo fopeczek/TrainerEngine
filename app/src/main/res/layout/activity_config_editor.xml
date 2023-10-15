@@ -7,4 +7,38 @@
         android:layout_height="match_parent"
         tools:context=".configs.ConfigEditor">
 
+    <Button
+            android:text="Done"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/done_config_edit"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="100dp"
+            app:layout_constraintStart_toStartOf="parent"/>
+    <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Config 1"
+            android:ems="10"
+            android:id="@+id/config_name" android:singleLine="true"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="32dp" android:textSize="24sp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large" android:inputType="textPersonName"
+            android:textAlignment="center"/>
+    <TextView
+            android:text="Config settings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/text_config_settings"
+            app:layout_constraintTop_toBottomOf="@+id/config_name" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large" android:textSize="24sp"
+            android:textAlignment="center"/>
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/text_config_settings" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="32dp" android:id="@+id/settings_list">
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -9,6 +9,8 @@ import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.updateLayoutParams
 import com.example.trainerengine.R
 import com.example.trainerengine.configs.ModuleConfig
 import com.example.trainerengine.modules.*
@@ -93,14 +95,19 @@ class PercentFragment(task: ModuleTask) : TaskFragment(task) {
     override fun updateUI() {
         val questionView = view.findViewById(R.id.PercentQuestion) as TextView
         val answerInput = view.findViewById(R.id.PercentAnswer) as SeekBar
+        val answerView = view.findViewById(R.id.AnswerPreview) as TextView
 
         questionView.text = getTask().getQuestion().getQuestion()
         answerInput.progress = getTask().getCurrentAttempt().userAnswer.getUserAnswer()!!.toString().toInt()
+        answerView.text = getTask().getCurrentAttempt().userAnswer.getUserAnswer()!!.toString() + "%"
+        answerView.updateLayoutParams<ConstraintLayout.LayoutParams> { horizontalBias = answerInput.progress / 100.0f }
 
         if (getTask().getState() == TaskState.AWAITING) {
             answerInput.isEnabled = true
+            answerView.visibility = View.INVISIBLE
         } else if (getTask().getState() == TaskState.LOCKED) {
             answerInput.isEnabled = false
+            answerView.visibility = View.VISIBLE
         }
     }
 }

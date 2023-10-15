@@ -4,8 +4,8 @@ import com.example.trainerengine.database.Database
 import com.example.trainerengine.modules.ModuleTask
 
 class Session( //Here are the defaults for session creation
-    private var sessionID: Int,
-    private var database: Database,
+    private val sessionID: Int,
+    private val database: Database,
     private var configIDs: MutableList<Int> = mutableListOf(),
     private var tasks: MutableList<ModuleTask> = mutableListOf(),
     private var name: String = "Session $sessionID",

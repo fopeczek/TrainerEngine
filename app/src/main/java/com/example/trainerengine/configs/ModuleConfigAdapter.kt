@@ -16,7 +16,8 @@ class ModuleConfigAdapter(
     private val context: Context,
     private val allConfigs: MutableMap<Module, MutableList<ModuleConfig>>,
     private val selectedConfigs: MutableMap<Module, MutableList<ModuleConfig>>,
-    private val onCheckBox: (CheckBox, ModuleConfig) -> Unit
+    private val onCheckBoxClicked: (CheckBox, ModuleConfig) -> Unit,
+    private val onCheckBoxHeld: (CheckBox, ModuleConfig) -> Boolean
 ) : BaseExpandableListAdapter() {
 
     override fun getChild(listPosition: Int, expandedListPosition: Int): Any {
@@ -64,7 +65,10 @@ class ModuleConfigAdapter(
                     }
                 }
             }
-            onCheckBox(expandedListCheckbox, allConfigs.values.elementAt(listPosition).elementAt(expandedListPosition))
+            onCheckBoxClicked(expandedListCheckbox, allConfigs.values.elementAt(listPosition).elementAt(expandedListPosition))
+        }
+        expandedListCheckbox.setOnLongClickListener {
+            onCheckBoxHeld(expandedListCheckbox, allConfigs.values.elementAt(listPosition).elementAt(expandedListPosition))
         }
         return view
     }

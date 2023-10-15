@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.trainerengine.R
+import com.example.trainerengine.configs.ConfigEditor
 import com.example.trainerengine.database.Database
 import com.example.trainerengine.database.QueryHelper
 import com.example.trainerengine.globalModules
@@ -71,10 +72,15 @@ class SessionEditor : AppCompatActivity() {
             selectedConfigs[globalModules[config.getModuleID()]]!!.add(config)
         }
 
-        val adapter = ModuleConfigAdapter(this, allConfigs, selectedConfigs) { checkBox, config -> onConfigClicked(checkBox, config) }
+        val adapter = ModuleConfigAdapter(this,
+            allConfigs,
+            selectedConfigs,
+            { checkBox: CheckBox, config: ModuleConfig -> onConfigClicked(checkBox, config) },
+            { checkBox: CheckBox, config: ModuleConfig -> onConfigHeld(checkBox, config) })
+
         configList.setAdapter(adapter)
 
-        val next = findViewById<Button>(R.id.next_session_create)
+        val next = findViewById<Button>(R.id.next_session_edit)
         next.setOnClickListener { onNext() }
     }
 
@@ -89,6 +95,13 @@ class SessionEditor : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun onConfigHeld(checkBox: CheckBox, config: ModuleConfig): Boolean {
+        val intent = Intent(this, ConfigEditor::class.java)
+        intent.putExtra(Database.configID, config.getConfigID())
+        startActivity(intent)
+        return true
     }
 
     private fun onBack() {
@@ -120,10 +133,14 @@ class SessionEditor : AppCompatActivity() {
             selectedConfigs[globalModules[config.getModuleID()]]!!.add(config)
         }
 
-        val adapter = ModuleConfigAdapter(this, allConfigs, selectedConfigs) { checkBox, config -> onConfigClicked(checkBox, config) }
+        val adapter = ModuleConfigAdapter(this,
+            allConfigs,
+            selectedConfigs,
+            { checkBox, config -> onConfigClicked(checkBox, config) },
+            { checkBox, config -> onConfigHeld(checkBox, config) })
         configList.setAdapter(adapter)
 
-        val next = findViewById<Button>(R.id.next_session_create)
+        val next = findViewById<Button>(R.id.next_session_edit)
         next.setOnClickListener { onNext() }
     }
 
@@ -155,9 +172,9 @@ class SessionEditor : AppCompatActivity() {
         repeatableInput.isChecked = repeatable
         resetInput.isChecked = reset
 
-        val back = findViewById<Button>(R.id.back_session_create)
+        val back = findViewById<Button>(R.id.back_session_edit)
         back.setOnClickListener { onBack() }
-        val done = findViewById<Button>(R.id.done_session_create)
+        val done = findViewById<Button>(R.id.done_session_edit)
         done.setOnClickListener { onDone() }
     }
 
