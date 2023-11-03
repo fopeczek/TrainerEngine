@@ -11,31 +11,47 @@ import com.example.trainerengine.modules.ModuleTask
 import com.example.trainerengine.modules.MathModule.MathModuleStub
 import com.example.trainerengine.modules.PercentModule.PercentModuleStub
 import com.example.trainerengine.modules.PythonMathModule.PythonMathModuleStub
+import com.example.trainerengine.skills.Skill
+import com.example.trainerengine.skills.SkillSet
 
 class Database(private val queryHelper: QueryHelper) {
     companion object {
-        const val taskID = "TaskID"
-        const val attemptID = "AttemptID"
-        const val answerID = "AnswerID"
         const val sessionID = "SessionID"
-        const val moduleID = "ModuleID"
-        const val configID = "ConfigID"
-        const val answer = "Answer"
-        const val userAnswer = "UserAnswer"
-        const val question = "Question"
-        const val judgment = "Judgement"
-        const val timestamp = "Timestamp"
-        const val points = "Points"
-        const val configIDs = "ConfigIDs"
+        const val sessionName = "SessionName"
         const val repeatable = "Repeatable"
         const val reset = "Reset"
         const val penaltyPoints = "PenaltyPoints"
         const val targetPoints = "TargetPoints"
-        const val sessionName = "SessionName"
+        const val configIDs = "ConfigIDs"
+        const val points = "Points"
+
+        const val moduleID = "ModuleID"
         const val moduleName = "ModuleName"
+
+        const val configID = "ConfigID"
+
+        const val configDataID = "ConfigDataID"
         const val configName = "ConfigName"
         const val configType = "ConfigType"
         const val configValue = "ConfigValue"
+
+        const val taskID = "TaskID"
+        const val question = "Question"
+
+        const val attemptID = "AttemptID"
+        const val userAnswer = "UserAnswer"
+        const val judgment = "Judgement"
+
+        const val answerID = "AnswerID"
+        const val answer = "Answer"
+
+        const val skillSetID = "SkillSetID"
+
+        const val skillID = "SkillID"
+        const val skillName = "SkillName"
+        const val skillDescription = "SkillDescription"
+
+        const val timestamp = "Timestamp"
 
         const val sessionsTable = "Sessions"
         const val modulesTable = "Modules"
@@ -44,16 +60,20 @@ class Database(private val queryHelper: QueryHelper) {
         const val taskTable = "Tasks"
         const val attemptsTable = "Attempts"
         const val answersTable = "Answers"
+        const val skillSetsTable = "SkillSets"
+        const val skillsTable = "Skills"
     }
 
     init {
         initializeSessionsTable()
         initializeModulesTable()
+        initializeConfigsTable()
+        initializeConfigsDataTable()
         initializeTasksTable()
         initializeAttemptsTable()
         initializeAnswersTable()
-        initializeConfigsTable()
-        initializeConfigsDataTable()
+        initializeSkillSetsTable()
+        initializeSkillsTable()
     }
 
     private fun initializeSessionsTable() {
@@ -121,24 +141,24 @@ class Database(private val queryHelper: QueryHelper) {
         }
     }
 
-    fun makeNewSessionID(): Int {
-        return queryHelper.makeNewID(sessionsTable, sessionID)
-    }
-
     private fun fillSessionFromMap(data: Map<String, Any>): Session {
-        val sessionID = data[sessionID].toString().toInt()
-        val sessionName = data[sessionName].toString()
-        val configIDs = data[configIDs].toString().split(",").map { it.toInt() }.toMutableList()
-        val points = data[points].toString().toInt()
-        val targetPoints = data[targetPoints].toString().toInt()
-        val reset = data[reset].toString().toBoolean()
+        val sessionID = data[sessionID] as Int
+        val sessionName = data[sessionName] as String
+        val configIDs = (data[configIDs] as String).split(",").map { it.toInt() }.toMutableList()
+        val points = data[points] as Int
+        val targetPoints = data[targetPoints] as Int
+        val reset = data[reset] as Boolean
         val pointPenalty = data[penaltyPoints] as Int
-        val repeatable = data[repeatable].toString().toBoolean()
+        val repeatable = data[repeatable] as Boolean
         val answeredTaskAmount = loadAmountOfAttemptedTasks(sessionID)
         val tasks = loadTasks(sessionID)
         return Session(
             sessionID, this, configIDs, tasks, sessionName, repeatable, reset, pointPenalty, targetPoints, answeredTaskAmount, points
         )
+    }
+
+    fun makeNewSessionID(): Int {
+        return queryHelper.makeNewID(sessionsTable, sessionID)
     }
 
     private fun initializeModulesTable() {
@@ -159,23 +179,28 @@ class Database(private val queryHelper: QueryHelper) {
         val data = queryHelper.getAll(modulesTable, true)
         val modules = mutableListOf<Module>()
         for (row in data) {
-            val moduleID = row[moduleID] as Int
-            val moduleName = row[moduleName] as String
-            when (moduleName) {
-                MathModuleStub().databaseName -> {
-                    modules.add(MathModuleStub().createModule(moduleID))
-                }
-
-                PercentModuleStub().databaseName -> {
-                    modules.add(PercentModuleStub().createModule(moduleID))
-                }
-
-                PythonMathModuleStub().databaseName -> {
-                    modules.add(PythonMathModuleStub().createModule(moduleID))
-                }
-            }
+            modules.add(fillModuleFromMap(row))
         }
         return modules
+    }
+
+    private fun fillModuleFromMap(data: Map<String, Any>): Module {
+        val moduleID = data[moduleID].toString().toInt()
+        val moduleName = data[moduleName].toString()
+        when (moduleName) {
+            MathModuleStub().databaseName -> {
+                return MathModuleStub().createModule(moduleID)
+            }
+
+            PercentModuleStub().databaseName -> {
+                return PercentModuleStub().createModule(moduleID)
+            }
+
+            PythonMathModuleStub().databaseName -> {
+                return PythonMathModuleStub().createModule(moduleID)
+            }
+        }
+        throw Exception("Module not found")
     }
 
     fun makeNewModuleID(): Int {
@@ -198,10 +223,7 @@ class Database(private val queryHelper: QueryHelper) {
 
     fun loadConfig(configID: Int): ModuleConfig {
         val data = queryHelper.getRow(configsTable, Companion.configID, configID)
-        val configName = data[configName] as String
-        val moduleID = data[moduleID] as Int
-        val configData = loadConfigData(configID)
-        return ModuleConfig(configID, moduleID, this, configName, configData)
+        return fillConfigFromMap(data)
     }
 
     fun loadConfig(moduleID: Int, configName: String): ModuleConfig? {
@@ -212,20 +234,14 @@ class Database(private val queryHelper: QueryHelper) {
         if (result == null) {
             return null
         }
-        val configID = result[configID] as Int
-        val configData = loadConfigData(configID)
-        return ModuleConfig(configID, moduleID, this, configName, configData)
+        return fillConfigFromMap(result)
     }
 
     fun loadConfigs(): MutableList<ModuleConfig> {
         val data = queryHelper.getAll(configsTable)
         val configs = mutableListOf<ModuleConfig>()
         for (row in data) {
-            val configID = row[configID] as Int
-            val configName = row[configName] as String
-            val moduleID = row[moduleID] as Int
-            val configData = loadConfigData(configID)
-            configs.add(ModuleConfig(configID, moduleID, this, configName, configData))
+            configs.add(fillConfigFromMap(row))
         }
         return configs
     }
@@ -234,10 +250,7 @@ class Database(private val queryHelper: QueryHelper) {
         val data = queryHelper.getAllFiltered(configsTable, Companion.moduleID, moduleID)
         val configs = mutableListOf<ModuleConfig>()
         for (row in data) {
-            val configID = row[configID] as Int
-            val configName = row[configName] as String
-            val configData = loadConfigData(configID)
-            configs.add(ModuleConfig(configID, moduleID, this, configName, configData))
+            configs.add(fillConfigFromMap(row))
         }
         return configs
     }
@@ -257,19 +270,32 @@ class Database(private val queryHelper: QueryHelper) {
         }
     }
 
+    private fun fillConfigFromMap(data: Map<String, Any>): ModuleConfig {
+        val configID = data[configID] as Int
+        val configName = data[configName] as String
+        val moduleID = data[moduleID] as Int
+        val configData = loadConfigData(configID)
+        return ModuleConfig(configID, moduleID, this, configName, configData)
+    }
+
     fun makeNewConfigID(): Int {
         return queryHelper.makeNewID(configsTable, configID)
     }
 
     private fun initializeConfigsDataTable() {
         val columns = mutableMapOf(
-            configID to ColumnType.INT, configName to ColumnType.TEXT, configType to ColumnType.TEXT, configValue to ColumnType.TEXT
+            configDataID to ColumnType.INT,
+            configID to ColumnType.INT,
+            configName to ColumnType.TEXT,
+            configType to ColumnType.TEXT,
+            configValue to ColumnType.TEXT
         )
-        queryHelper.initialize2KeyTable(configDataTable, columns)
+        queryHelper.initializeTable(configDataTable, columns)
     }
 
     fun saveConfigData(configData: ConfigData) {
         val data = mapOf(
+            configDataID to configData.getConfigDataID(),
             configID to configData.getConfigID(),
             configName to configData.getName(),
             configType to configData.getType(),
@@ -282,7 +308,7 @@ class Database(private val queryHelper: QueryHelper) {
         val data = queryHelper.getAll(configDataTable)
         val configData = mutableListOf<ConfigData>()
         for (row in data) {
-            configData.add(fillConfigDataFromMap(row)!!)
+            configData.add(fillConfigDataFromMap(row))
         }
         return configData
     }
@@ -291,18 +317,19 @@ class Database(private val queryHelper: QueryHelper) {
         val data = queryHelper.getAllFiltered(configDataTable, Companion.configID, configID)
         val configData = mutableListOf<ConfigData>()
         for (row in data) {
-            configData.add(fillConfigDataFromMap(row)!!)
+            configData.add(fillConfigDataFromMap(row))
         }
         return configData
     }
 
     private fun updateConfigData(configData: ConfigData) {
         val data = mapOf(
+            configID to configData.getConfigID(),
             configName to configData.getName(),
             configType to configData.getType(),
             configValue to configData.getValue()
         )
-        queryHelper.updateRow(configDataTable, configID, configData.getConfigID(), data)
+        queryHelper.updateRow(configDataTable, configDataID, configData.getConfigDataID(), data)
     }
 
     fun isConfigDataSaved(configData: ConfigData): Boolean {
@@ -319,34 +346,29 @@ class Database(private val queryHelper: QueryHelper) {
         return true
     }
 
-    private fun fillConfigDataFromMap(data: Map<String, Any>): ConfigData? {
+    private fun fillConfigDataFromMap(data: Map<String, Any>): ConfigData {
+        val configDataID = data[configDataID] as Int
+        val configID = data[configID] as Int
+        val configName = data[configName] as String
+        val configType = data[configType] as String
+        var configValue: Any? = null
         if (data[configType] == "bool") {
-            return ConfigData(
-                data[configID].toString().toInt(),
-                data[configName].toString(),
-                data[configType].toString(),
-                data[configValue].toString().toBoolean()
-            )
+            configValue = data[Companion.configValue] as Boolean
         } else if (data[configType] == "int") {
-            return ConfigData(
-                data[configID].toString().toInt(),
-                data[configName].toString(),
-                data[configType].toString(),
-                data[configValue].toString().toInt()
-            )
+            configValue = data[Companion.configValue] as Int
         } else if (data[configType] == "float") {
-            return ConfigData(
-                data[configID].toString().toInt(),
-                data[configName].toString(),
-                data[configType].toString(),
-                data[configValue].toString().toFloat()
-            )
+            configValue = data[Companion.configValue] as Float
         } else if (data[configType] == "string") {
-            return ConfigData(
-                data[configID].toString().toInt(), data[configName].toString(), data[configType].toString(), data[configValue].toString()
-            )
+            configValue = data[Companion.configValue] as String
         }
-        return null
+        if (configValue == null) {
+            throw Exception("Config value is null")
+        }
+        return ConfigData(configDataID, configID, configName, configType, configValue)
+    }
+
+    fun makeNewConfigDataID(): Int {
+        return queryHelper.makeNewID(configDataTable, configDataID)
     }
 
     private fun initializeTasksTable() {
@@ -377,15 +399,7 @@ class Database(private val queryHelper: QueryHelper) {
         val data = queryHelper.getAllFiltered(taskTable, Companion.sessionID, sessionID, true)
         val tasks = mutableListOf<ModuleTask>()
         for (row in data) {
-            val moduleID = row[moduleID] as Int
-            val module = globalModules[moduleID]
-            val taskID = row[taskID] as Int
-            val question = row[question] as String
-            val answers = loadAnswers(taskID)
-            val attempts = loadAttempts(taskID)
-            val config = loadConfig(row[configID] as Int)
-            val task = module!!.deserializeTask(question, answers, attempts, taskID, config)
-            tasks.add(task)
+            tasks.add(fillTaskFromMap(row))
         }
         return tasks
     }
@@ -394,6 +408,17 @@ class Database(private val queryHelper: QueryHelper) {
         queryHelper.removeRow(taskTable, Companion.taskID, taskID)
         queryHelper.removeRow(attemptsTable, Companion.taskID, taskID)
         queryHelper.removeRow(answersTable, Companion.taskID, taskID)
+    }
+
+    private fun fillTaskFromMap(data: Map<String, Any>): ModuleTask {
+        val moduleID = data[moduleID] as Int
+        val module = globalModules[moduleID]
+        val taskID = data[taskID] as Int
+        val question = data[question] as String
+        val answers = loadAnswers(taskID)
+        val attempts = loadAttempts(taskID)
+        val config = loadConfig(data[configID] as Int)
+        return module!!.deserializeTask(question, answers, attempts, taskID, config)
     }
 
     fun makeNewTaskID(): Int {
@@ -426,16 +451,20 @@ class Database(private val queryHelper: QueryHelper) {
         val data = queryHelper.getAllFiltered(attemptsTable, Companion.taskID, taskID, true)
         val attempts = mutableListOf<Triple<Int, Any, Boolean>>()
         for (row in data) {
-            val attemptID = row[attemptID] as Int
-            val userAnswer = row[userAnswer] as String
-            val judgment = row[judgment] as Int == 1
-            attempts.add(Triple(attemptID, userAnswer, judgment))
+            attempts.add(fillAttemptFromMap(row))
         }
         return attempts
     }
 
     private fun loadAmountOfAttemptedTasks(sessionID: Int): Int {
         return queryHelper.getAllByIDFromTable(attemptsTable, taskTable, taskID, Companion.sessionID, sessionID).size
+    }
+
+    private fun fillAttemptFromMap(data: Map<String, Any>): Triple<Int, Any, Boolean> {
+        val attemptID = data[attemptID] as Int
+        val userAnswer = data[userAnswer] as String
+        val judgment = data[judgment] as Int == 1
+        return Triple(attemptID, userAnswer, judgment)
     }
 
     fun makeNewAttemptID(): Int {
@@ -460,14 +489,122 @@ class Database(private val queryHelper: QueryHelper) {
         val data = queryHelper.getAllFiltered(answersTable, Companion.taskID, taskID, true)
         val answers = mutableListOf<Pair<Int, String>>()
         for (row in data) {
-            val answerID = row[answerID] as Int
-            val answer = row[answer] as String
-            answers.add(Pair(answerID, answer))
+            answers.add(fillAnswerFromMap(row))
         }
         return answers
     }
 
+    fun fillAnswerFromMap(data: Map<String, Any>): Pair<Int, String> {
+        val answerID = data[answerID] as Int
+        val answer = data[answer] as String
+        return Pair(answerID, answer)
+    }
+
     fun makeNewAnswerID(): Int {
         return queryHelper.makeNewID(answersTable, answerID)
+    }
+
+    private fun initializeSkillSetsTable() {
+        val columns = mutableMapOf(
+            skillSetID to ColumnType.INT, moduleID to ColumnType.INT
+        )
+        queryHelper.initializeTable(skillSetsTable, columns)
+    }
+
+    fun saveSkillSet(skillSet: SkillSet) {
+        val data = mapOf(
+            skillSetID to skillSet.getSkillSetID(), moduleID to skillSet.getModuleID()
+        )
+        queryHelper.insertRow(skillSetsTable, data)
+    }
+
+    fun loadSkillSet(skillSetID: Int): SkillSet {
+        val data = queryHelper.getRow(skillSetsTable, Companion.skillSetID, skillSetID)
+        return fillSkillSetFromMap(data)
+    }
+
+    fun loadSkillSets(moduleID: Int): MutableList<SkillSet> {
+        val data = queryHelper.getAllFiltered(skillSetsTable, Companion.moduleID, moduleID)
+        val skillSets = mutableListOf<SkillSet>()
+        for (row in data) {
+            skillSets.add(fillSkillSetFromMap(row))
+        }
+        return skillSets
+    }
+
+    fun updateSkillSet(skillSet: SkillSet) {
+        val data = mapOf(
+            moduleID to skillSet.getModuleID()
+        )
+        queryHelper.updateRow(skillSetsTable, skillSetID, skillSet.getSkillSetID(), data)
+        for (skill in skillSet.getSkills()) {
+            updateSkill(skill)
+        }
+    }
+
+    private fun fillSkillSetFromMap(data: Map<String, Any>): SkillSet {
+        val skillSetID = data[skillSetID] as Int
+        val moduleID = data[moduleID] as Int
+        val skills = loadSkills(skillSetID)
+        return SkillSet(skillSetID, moduleID, this, skills)
+    }
+
+    fun makeNewSkillSetID(): Int {
+        return queryHelper.makeNewID(skillSetsTable, skillSetID)
+    }
+
+    private fun initializeSkillsTable() {
+        val columns = mutableMapOf(
+            skillID to ColumnType.INT,
+            skillSetID to ColumnType.INT,
+            skillName to ColumnType.TEXT,
+            skillDescription to ColumnType.TEXT,
+        )
+        queryHelper.initializeTable(skillsTable, columns)
+    }
+
+    fun saveSkill(skill: Skill) {
+        val data = mapOf(
+            skillID to skill.getSkillID(),
+            skillSetID to skill.getSkillSetID(),
+            skillName to skill.getName(),
+            skillDescription to skill.getDescription()
+        )
+        queryHelper.insertRow(skillsTable, data)
+    }
+
+    fun loadSkills(): MutableList<Skill> {
+        val data = queryHelper.getAll(skillsTable)
+        val skills = mutableListOf<Skill>()
+        for (row in data) {
+            skills.add(fillSkillFromMap(row))
+        }
+        return skills
+    }
+
+    private fun loadSkills(skillSetID: Int): MutableList<Skill> {
+        val data = queryHelper.getAllFiltered(skillsTable, Companion.skillSetID, skillSetID)
+        val skills = mutableListOf<Skill>()
+        for (row in data) {
+            skills.add(fillSkillFromMap(row))
+        }
+        return skills
+    }
+
+    private fun updateSkill(skill: Skill) {
+        val data = mapOf(
+            skillSetID to skill.getSkillSetID(), skillName to skill.getName(), skillDescription to skill.getDescription()
+        )
+        queryHelper.updateRow(skillsTable, skillID, skill.getSkillID(), data)
+    }
+
+    private fun fillSkillFromMap(data: Map<String, Any>): Skill {
+        return Skill(
+            data[skillID] as Int, data[skillSetID] as Int, data[skillName] as String, data[skillDescription] as String
+        )
+    }
+
+    fun makeNewSkillID(): Int {
+        return queryHelper.makeNewID(skillsTable, skillID)
     }
 }

@@ -10,6 +10,7 @@ import androidx.core.widget.addTextChangedListener
 import com.example.trainerengine.R
 import com.example.trainerengine.configs.ModuleConfig
 import com.example.trainerengine.modules.*
+import com.example.trainerengine.skills.SkillSet
 
 class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     stub,
@@ -40,7 +41,7 @@ class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
         } else {
             rand1 + rand2
         }
-        return MathTask(this, MathQuestion(question), listOf(MathAnswer(1, answer)), taskID, config)
+        return MathTask(this, MathQuestion(question), listOf(MathAnswer(0, answer)), taskID, config)
     }
 }
 

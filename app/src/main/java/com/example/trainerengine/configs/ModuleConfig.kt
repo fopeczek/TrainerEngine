@@ -51,11 +51,16 @@ class ModuleConfig(
 }
 
 class ConfigData(
+    private val configDataID: Int,
     private val configID: Int,
     private val name: String,
     private val type: String,
     private val value: Any
 ) {
+    fun getConfigDataID(): Int {
+        return configDataID
+    }
+
     fun getConfigID(): Int {
         return configID
     }

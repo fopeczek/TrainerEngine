@@ -3,6 +3,9 @@ import random
 import java
 from dataclasses import dataclass
 
+ModuleConfig = java.jclass("com.example.trainerengine.configs.ModuleConfig")
+ConfigData = java.jclass("com.example.trainerengine.configs.ConfigData")
+
 setting_descriptions = {
     "max_number": "Maximum number to be used in questions",
     "min_number": "Minimum number to be used in questions"}
@@ -116,10 +119,6 @@ def calc_score(judgement: JudgmentType, correct: AnswerType, skills: list[str]) 
     description["overall"] = (sum_points, weight)
 
     return description
-
-
-ModuleConfig = java.jclass("com.example.trainerengine.configs.ModuleConfig")
-ConfigData = java.jclass("com.example.trainerengine.configs.ConfigData")
 
 
 def make_task(
@@ -304,7 +303,7 @@ def check_answer(question: str, answer: int, correct: int, config: ModuleConfig)
         return True
 
 
-def parse_arithmetic_question(question: str)->tuple[int, str, int]:
+def parse_arithmetic_question(question: str) -> tuple[int, str, int]:
     """
     :param question: question in the format of "2+4" or "5-4". We support only "+" and "-" operators.
     :return: A tuple containing the two operands (as int) and the operator character.
@@ -318,6 +317,7 @@ def parse_arithmetic_question(question: str)->tuple[int, str, int]:
     if len(ans) == 2:
         return int(ans[0]), "-", int(ans[1])
     raise Exception(f"Question {question} is not in the format of '2+4' or '5-4'")
+
 
 def check_answer_calc(question: str, answer: int, correct: int, skills: list[str] = []) -> JudgmentType:
     """Returns True if the answer is correct, False otherwise."""

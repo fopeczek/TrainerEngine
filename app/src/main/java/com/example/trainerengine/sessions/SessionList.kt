@@ -99,19 +99,35 @@ class SessionList : AppCompatActivity() {
                 var configData: ConfigData? = null
                 if (setting.getString("type") == "int") {
                     configData = ConfigData(
-                        configID, setting.getString(settingName), setting.getString(settingType), setting.getLong(settingDefault)
+                        database.makeNewConfigDataID(),
+                        configID,
+                        setting.getString(settingName),
+                        setting.getString(settingType),
+                        setting.getLong(settingDefault)
                     )
                 } else if (setting.getString("type") == "float") {
                     configData = ConfigData(
-                        configID, setting.getString(settingName), setting.getString(settingType), setting.getDouble(settingDefault)
+                        database.makeNewConfigDataID(),
+                        configID,
+                        setting.getString(settingName),
+                        setting.getString(settingType),
+                        setting.getDouble(settingDefault)
                     )
                 } else if (setting.getString("type") == "string") {
                     configData = ConfigData(
-                        configID, setting.getString(settingName), setting.getString(settingType), setting.getString(settingDefault)
+                        database.makeNewConfigDataID(),
+                        configID,
+                        setting.getString(settingName),
+                        setting.getString(settingType),
+                        setting.getString(settingDefault)
                     )
                 } else if (setting.getString("type") == "bool") {
                     configData = ConfigData(
-                        configID, setting.getString(settingName), setting.getString(settingType), setting.getBoolean(settingDefault)
+                        database.makeNewConfigDataID(),
+                        configID,
+                        setting.getString(settingName),
+                        setting.getString(settingType),
+                        setting.getBoolean(settingDefault)
                     )
                 }
                 if (configData != null) {

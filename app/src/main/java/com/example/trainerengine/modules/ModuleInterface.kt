@@ -2,6 +2,8 @@ package com.example.trainerengine.modules
 
 import androidx.fragment.app.Fragment
 import com.example.trainerengine.configs.ModuleConfig
+import com.example.trainerengine.skills.Skill
+import com.example.trainerengine.skills.SkillSet
 
 enum class TaskState {
     AWAITING, LOCKED,
@@ -201,40 +203,6 @@ abstract class TaskFragment(private val task: ModuleTask) : Fragment() {
     }
 
     abstract fun updateUI()
-}
-
-abstract class SkillSet {
-    private val skills: MutableList<Skill> = mutableListOf()
-
-    fun size(): Int {
-        return skills.size
-    }
-
-    fun addSkill(skill: Skill) {
-        skills.add(skill)
-    }
-
-    fun contains(skill: Skill): Boolean {
-        return skills.contains(skill)
-    }
-
-    fun contains(subSet: SkillSet): Boolean {
-        return skills.containsAll(subSet.skills)
-    }
-}
-
-abstract class Skill(private val name: String, private val description: String, private val skillID: Int) {
-    fun getName(): String {
-        return name
-    }
-
-    fun getDescription(): String {
-        return description
-    }
-
-    fun getID(): Int {
-        return skillID
-    }
 }
 
 abstract class ModuleStub {

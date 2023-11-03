@@ -14,6 +14,7 @@ import androidx.core.view.updateLayoutParams
 import com.example.trainerengine.R
 import com.example.trainerengine.configs.ModuleConfig
 import com.example.trainerengine.modules.*
+import com.example.trainerengine.skills.SkillSet
 import java.lang.Math.*
 import kotlin.math.ln
 

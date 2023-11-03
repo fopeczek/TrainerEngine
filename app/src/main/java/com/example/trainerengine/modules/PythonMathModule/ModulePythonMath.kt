@@ -11,6 +11,7 @@ import com.chaquo.python.Python
 import com.example.trainerengine.R
 import com.example.trainerengine.configs.ModuleConfig
 import com.example.trainerengine.modules.*
+import com.example.trainerengine.skills.SkillSet
 
 class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     stub,
@@ -21,12 +22,11 @@ class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     { attempt, loadedUserAnswer -> PythonMathUserAnswer(attempt, loadedUserAnswer) },
     { attempt, loadedJudgement -> PythonMathJudgment(attempt, loadedJudgement) },
     { task -> PythonMathFragment(task) }) {
-    val pythonModule = Python.getInstance().getModule("AdamaModule/module")
+    val pythonModule = Python.getInstance().getModule("MikModule/module")
 
     override fun makeTask(taskID: Int, config: ModuleConfig): ModuleTask {
         val task = pythonModule.callAttr("make_task", config).asList()
-        assert(task.size == 3) //TODO replace with on init validation
-        return PythonMathTask(this, PythonMathQuestion(task[0].toString()), listOf(PythonMathAnswer(1, task[1].toString())), taskID, config)
+        return PythonMathTask(this, PythonMathQuestion(task[0].toString()), listOf(PythonMathAnswer(0, task[1].toString())), taskID, config)
     }
 }
 
@@ -55,7 +55,7 @@ class PythonMathJudgment(attempt: TaskAttempt, loadedJudgment: Boolean?) : TaskJ
         judgement = module.pythonModule.callAttr(
             "check_answer",
             attempt.task().getQuestion().getQuestion(),
-            attempt.task().getAnswers().first().getAnswer().toString().toInt(),
+            attempt.task().getAnswers().first().getAnswer().toInt(),
             attempt.userAnswer.getUserAnswer().toString().toInt(),
             attempt.task().getConfig()
         ).toBoolean()
