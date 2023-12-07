@@ -6,6 +6,8 @@ import java.util.*
 
 val globalModules = mutableMapOf<Int, Module>() // ModuleID -> Module
 
+var ranInit = false
+
 fun getModule(moduleName: String): Module {
     for (module in globalModules.values) {
         if (module.getStub().descriptionName == moduleName) {

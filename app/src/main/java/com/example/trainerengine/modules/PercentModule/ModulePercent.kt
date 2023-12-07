@@ -1,5 +1,3 @@
-@file:Suppress("ReplaceJavaStaticMethodWithKotlinAnalog")
-
 package com.example.trainerengine.modules.PercentModule
 
 import android.os.Bundle
@@ -14,7 +12,6 @@ import androidx.core.view.updateLayoutParams
 import com.example.trainerengine.R
 import com.example.trainerengine.configs.ModuleConfig
 import com.example.trainerengine.modules.*
-import com.example.trainerengine.skills.SkillSet
 import java.lang.Math.*
 import kotlin.math.ln
 
@@ -33,6 +30,10 @@ class PercentModule(moduleID: Int, stub: ModuleStub) : Module(moduleID, stub,
         val value = (minValue..maxValue).random()
         val question = "$value%"
         return PercentTask(this, PercentQuestion(question), listOf(PercentAnswer(0, value)), taskID, config)
+    }
+
+    override fun getAllSkills(): MutableMap<String, String> {
+        return mutableMapOf()
     }
 }
 
@@ -77,7 +78,7 @@ class PercentFragment(task: ModuleTask) : TaskFragment(task) {
     ): View {
         view = inflater.inflate(R.layout.module_percent, container, false)
 
-        val answerInput = view.findViewById(R.id.PercentAnswer) as SeekBar
+        val answerInput = view.findViewById(R.id.module_percent_seekbar_answer) as SeekBar
         if (getTask().getCurrentAttempt().userAnswer.getUserAnswer() == null) {
             getTask().getCurrentAttempt().userAnswer.setUserAnswer(50)
         }
@@ -94,9 +95,9 @@ class PercentFragment(task: ModuleTask) : TaskFragment(task) {
     }
 
     override fun updateUI() {
-        val questionView = view.findViewById(R.id.PercentQuestion) as TextView
-        val answerInput = view.findViewById(R.id.PercentAnswer) as SeekBar
-        val answerView = view.findViewById(R.id.AnswerPreview) as TextView
+        val questionView = view.findViewById(R.id.module_percent_text_question) as TextView
+        val answerInput = view.findViewById(R.id.module_percent_seekbar_answer) as SeekBar
+        val answerView = view.findViewById(R.id.module_percent_text_preview) as TextView
 
         questionView.text = getTask().getQuestion().getQuestion()
         answerInput.progress = getTask().getCurrentAttempt().userAnswer.getUserAnswer()!!.toString().toInt()
@@ -120,9 +121,5 @@ class PercentModuleStub : ModuleStub() {
 
     override fun createModule(moduleID: Int): Module {
         return PercentModule(moduleID, this)
-    }
-
-    override fun getSkillSet(): SkillSet {
-        TODO("Not yet implemented")
     }
 }

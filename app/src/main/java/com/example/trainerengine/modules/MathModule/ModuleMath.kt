@@ -10,7 +10,6 @@ import androidx.core.widget.addTextChangedListener
 import com.example.trainerengine.R
 import com.example.trainerengine.configs.ModuleConfig
 import com.example.trainerengine.modules.*
-import com.example.trainerengine.skills.SkillSet
 
 class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     stub,
@@ -43,6 +42,10 @@ class MathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
         }
         return MathTask(this, MathQuestion(question), listOf(MathAnswer(0, answer)), taskID, config)
     }
+
+    override fun getAllSkills(): MutableMap<String, String> {
+        return mutableMapOf()
+    }
 }
 
 class MathTask(
@@ -66,8 +69,7 @@ class MathUserAnswer(attempt: TaskAttempt, loadedUserAnswer: Any?) : TaskUserAns
 
 class MathJudgment(attempt: TaskAttempt, loadedJudgment: Boolean?) : TaskJudgment(attempt, loadedJudgment) {
     override fun checkAnswer() {
-        judgement =
-            attempt.userAnswer.getUserAnswer().toString().toInt() == attempt.task().getAnswers()[0].getAnswer().toInt()
+        judgement = attempt.userAnswer.getUserAnswer().toString().toInt() == attempt.task().getAnswers()[0].getAnswer().toInt()
     }
 }
 
@@ -82,9 +84,9 @@ class MathFragment(task: ModuleTask) : TaskFragment(task) {
     ): View {
         view = inflater.inflate(R.layout.module_math, container, false)
 
-        answerPreview = view.findViewById(R.id.MathPreview) as TextView
-        questionView = view.findViewById(R.id.MathQuestion) as TextView
-        answerInput = view.findViewById(R.id.MathAnswer) as EditText
+        answerPreview = view.findViewById(R.id.module_math_text_preview) as TextView
+        questionView = view.findViewById(R.id.module_math_text_question) as TextView
+        answerInput = view.findViewById(R.id.module_math_input_answer) as EditText
         answerInput.addTextChangedListener { text ->
             if (text.toString() == "" || text.toString() == "-") {
                 getTask().getCurrentAttempt().userAnswer.setUserAnswer(null)
@@ -123,9 +125,5 @@ class MathModuleStub : ModuleStub() {
 
     override fun createModule(moduleID: Int): Module {
         return MathModule(moduleID, this)
-    }
-
-    override fun getSkillSet(): SkillSet {
-        TODO("Not yet implemented")
     }
 }

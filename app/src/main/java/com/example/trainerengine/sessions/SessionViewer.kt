@@ -174,18 +174,18 @@ class SessionViewer : AppCompatActivity() {
         }
         sessionManager = SessionManager(sessionId, this)
 
-        pager = findViewById(R.id.Pager)
+        pager = findViewById(R.id.session_viewer_pager)
         val adapter = TaskPagerAdapter(supportFragmentManager, lifecycle, sessionManager)
         pager.adapter = adapter
 
-        correct = findViewById(R.id.Correct)
+        correct = findViewById(R.id.session_viewer_image_correct)
         correct.setImageDrawable(SeekableAnimatedVectorDrawable.create(this, R.drawable.avd_correct))
         correctAvd = correct.drawable as SeekableAnimatedVectorDrawable
-        wrong = findViewById(R.id.Wrong)
+        wrong = findViewById(R.id.session_viewer_image_wrong)
         wrong.setImageDrawable(SeekableAnimatedVectorDrawable.create(this, R.drawable.avd_wrong))
         wrongAvd = wrong.drawable as SeekableAnimatedVectorDrawable
 
-        submitButton = findViewById(R.id.Submit)
+        submitButton = findViewById(R.id.session_viewer_button_submit)
         submitButton.setOnClickListener { sessionManager.submitAnswer() }
 
 //        val viewTreeObserver: ViewTreeObserver = submitButton.viewTreeObserver
@@ -237,7 +237,7 @@ class SessionViewer : AppCompatActivity() {
             }
         })
 
-        progressBar = findViewById(R.id.Points)
+        progressBar = findViewById(R.id.session_viewer_progressbar_points)
         progressBar.max = sessionManager.getTargetPoints()
         progressBar.progress = sessionManager.getPoints()
     }

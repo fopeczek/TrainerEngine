@@ -3,7 +3,7 @@
               android:orientation="vertical" android:layout_width="match_parent"
               android:layout_height="wrap_content">
     <CheckBox
-            android:id="@+id/expandedListItem"
+            android:id="@+id/list_item_expanded_list_item"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:paddingLeft="?android:attr/expandableListPreferredChildPaddingLeft"

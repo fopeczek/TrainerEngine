@@ -38,7 +38,7 @@ class ModuleConfigAdapter(
             val layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             view = layoutInflater.inflate(R.layout.list_item, null)
         }
-        val expandedListCheckbox = view!!.findViewById<View>(R.id.expandedListItem) as CheckBox
+        val expandedListCheckbox = view!!.findViewById<View>(R.id.list_item_expanded_list_item) as CheckBox
         expandedListCheckbox.text = expandedListText
 
         var unchecked = true
@@ -97,7 +97,7 @@ class ModuleConfigAdapter(
             val layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             view = layoutInflater.inflate(R.layout.list_group, null)
         }
-        val listTitleTextView = view!!.findViewById<View>(R.id.listTitle) as TextView
+        val listTitleTextView = view!!.findViewById<View>(R.id.list_group_list_title) as TextView
         listTitleTextView.setTypeface(null, Typeface.BOLD)
         listTitleTextView.text = listTitle
         return view

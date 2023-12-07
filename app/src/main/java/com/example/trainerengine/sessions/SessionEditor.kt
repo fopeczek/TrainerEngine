@@ -36,7 +36,7 @@ class SessionEditor : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_session_module_selector)
+        setContentView(R.layout.activity_session_config_select)
         database = Database(QueryHelper(applicationContext))
 
         if (intent.hasExtra(Database.sessionID)) {
@@ -53,8 +53,8 @@ class SessionEditor : AppCompatActivity() {
         repeatable = session.getRepeatable()
         reset = session.getReset()
 
-        configList = findViewById(R.id.list_modules)
-        sessionNameInput = findViewById(R.id.input_session_name)
+        configList = findViewById(R.id.session_config_select_list_config)
+        sessionNameInput = findViewById(R.id.session_config_select_input_name)
 
         sessionNameInput.setText(session.getName())
 
@@ -80,7 +80,7 @@ class SessionEditor : AppCompatActivity() {
 
         configList.setAdapter(adapter)
 
-        val next = findViewById<Button>(R.id.next_session_edit)
+        val next = findViewById<Button>(R.id.session_config_select_button_next)
         next.setOnClickListener { onNext() }
     }
 
@@ -114,9 +114,9 @@ class SessionEditor : AppCompatActivity() {
         repeatable = repeatableInput.isChecked
         reset = resetInput.isChecked
 
-        setContentView(R.layout.activity_session_module_selector)
-        configList = findViewById(R.id.list_modules)
-        sessionNameInput = findViewById(R.id.input_session_name)
+        setContentView(R.layout.activity_session_config_select)
+        configList = findViewById(R.id.session_config_select_list_config)
+        sessionNameInput = findViewById(R.id.session_config_select_input_name)
 
         sessionNameInput.setText(sessionName)
         for (configID in session.getConfigIDs()) {
@@ -140,7 +140,7 @@ class SessionEditor : AppCompatActivity() {
             { checkBox, config -> onConfigHeld(checkBox, config) })
         configList.setAdapter(adapter)
 
-        val next = findViewById<Button>(R.id.next_session_edit)
+        val next = findViewById<Button>(R.id.session_config_select_button_next)
         next.setOnClickListener { onNext() }
     }
 
@@ -151,18 +151,18 @@ class SessionEditor : AppCompatActivity() {
         sessionName = sessionNameInput.text.toString()
 
         setContentView(R.layout.activity_session_settings)
-        sessionNameInput = findViewById(R.id.input_session_name2)
-        penaltyInput = findViewById(R.id.input_penalty)
-        targetInput = findViewById(R.id.input_target)
-        repeatableInput = findViewById(R.id.checkbox_repeatable)
-        resetInput = findViewById(R.id.checkbox_reset)
+        sessionNameInput = findViewById(R.id.session_settings_input_name)
+        penaltyInput = findViewById(R.id.session_settings_input_penalty)
+        targetInput = findViewById(R.id.session_settings_input_target)
+        repeatableInput = findViewById(R.id.session_settings_checkbox_repeatable)
+        resetInput = findViewById(R.id.session_settings_checkbox_reset)
         resetInput.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 penaltyInput.isEnabled = false
-                findViewById<TextView>(R.id.text_penalty).isEnabled = false
+                findViewById<TextView>(R.id.session_settings_text_penalty).isEnabled = false
             } else {
                 penaltyInput.isEnabled = true
-                findViewById<TextView>(R.id.text_penalty).isEnabled = true
+                findViewById<TextView>(R.id.session_settings_text_penalty).isEnabled = true
             }
         }
 
@@ -172,9 +172,9 @@ class SessionEditor : AppCompatActivity() {
         repeatableInput.isChecked = repeatable
         resetInput.isChecked = reset
 
-        val back = findViewById<Button>(R.id.back_session_edit)
+        val back = findViewById<Button>(R.id.session_settings_button_back)
         back.setOnClickListener { onBack() }
-        val done = findViewById<Button>(R.id.done_session_edit)
+        val done = findViewById<Button>(R.id.session_settings_button_done)
         done.setOnClickListener { onDone() }
     }
 

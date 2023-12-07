@@ -10,7 +10,7 @@
     <Button
             android:text="Done"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:id="@+id/done_config_edit"
+            android:layout_height="wrap_content" android:id="@+id/config_editor_button_done"
             app:layout_constraintEnd_toEndOf="parent"
             android:textSize="24sp"
             app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="100dp"
@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:text="Config 1"
             android:ems="10"
-            android:id="@+id/config_name" android:singleLine="true"
+            android:id="@+id/config_editor_input_name" android:singleLine="true"
             app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="32dp" android:textSize="24sp"
             android:textAppearance="@style/TextAppearance.AppCompat.Large" android:inputType="textPersonName"
@@ -28,8 +28,8 @@
     <TextView
             android:text="Config settings"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:id="@+id/text_config_settings"
-            app:layout_constraintTop_toBottomOf="@+id/config_name" app:layout_constraintEnd_toEndOf="parent"
+            android:layout_height="wrap_content" android:id="@+id/config_editor_text_settings"
+            app:layout_constraintTop_toBottomOf="@+id/config_editor_input_name" app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             android:textAppearance="@style/TextAppearance.AppCompat.Large" android:textSize="24sp"
             android:textAlignment="center"/>
@@ -37,8 +37,8 @@
             android:orientation="vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@+id/text_config_settings" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/config_editor_text_settings" app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginTop="32dp" android:id="@+id/settings_list">
+            android:layout_marginTop="32dp" android:id="@+id/config_editor_list_settings">
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -48,6 +48,10 @@ class ModuleConfig(
         this.configData = configData
         database.updateConfig(this)
     }
+
+    fun contains(subConfig: ModuleConfig): Boolean {
+        return this.configData.containsAll(subConfig.configData)
+    }
 }
 
 class ConfigData(

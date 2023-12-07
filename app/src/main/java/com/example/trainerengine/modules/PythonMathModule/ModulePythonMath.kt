@@ -11,7 +11,6 @@ import com.chaquo.python.Python
 import com.example.trainerengine.R
 import com.example.trainerengine.configs.ModuleConfig
 import com.example.trainerengine.modules.*
-import com.example.trainerengine.skills.SkillSet
 
 class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     stub,
@@ -27,6 +26,15 @@ class PythonMathModule(moduleID: Int, stub: ModuleStub) : Module(moduleID,
     override fun makeTask(taskID: Int, config: ModuleConfig): ModuleTask {
         val task = pythonModule.callAttr("make_task", config).asList()
         return PythonMathTask(this, PythonMathQuestion(task[0].toString()), listOf(PythonMathAnswer(0, task[1].toString())), taskID, config)
+    }
+
+    override fun getAllSkills(): MutableMap<String, String> {
+        val skills = pythonModule.callAttr("get_all_skills").asMap()
+        val result = mutableMapOf<String, String>()
+        for (skill in skills) {
+            result[skill.key.toString()] = skill.value.toString()
+        }
+        return result
     }
 }
 
@@ -73,9 +81,9 @@ class PythonMathFragment(task: ModuleTask) : TaskFragment(task) {
     ): View {
         view = inflater.inflate(R.layout.module_math, container, false)
 
-        answerPreview = view.findViewById(R.id.MathPreview) as TextView
-        questionView = view.findViewById(R.id.MathQuestion) as TextView
-        answerInput = view.findViewById(R.id.MathAnswer) as EditText
+        answerPreview = view.findViewById(R.id.module_math_text_preview) as TextView
+        questionView = view.findViewById(R.id.module_math_text_question) as TextView
+        answerInput = view.findViewById(R.id.module_math_input_answer) as EditText
         answerInput.addTextChangedListener { text ->
             if (text.toString() == "" || text.toString() == "-") {
                 getTask().getCurrentAttempt().userAnswer.setUserAnswer(null)
@@ -114,9 +122,5 @@ class PythonMathModuleStub : ModuleStub() {
 
     override fun createModule(moduleID: Int): Module {
         return PythonMathModule(moduleID, this)
-    }
-
-    override fun getSkillSet(): SkillSet {
-        TODO("Not yet implemented")
     }
 }

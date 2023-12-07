@@ -10,12 +10,12 @@
             android:inputType="textPersonName"
             android:text="Session 1"
             android:ems="10"
-            android:id="@+id/input_session_name2" app:layout_constraintEnd_toEndOf="parent"
+            android:id="@+id/session_settings_input_name" app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"
             android:layout_marginTop="32dp" android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textSize="24sp" android:textAlignment="center" android:singleLine="true"/>
     <TextView
-            android:id="@+id/text_module_select2"
+            android:id="@+id/session_settings_text_settings"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Session settings"
@@ -24,15 +24,15 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            app:layout_constraintTop_toBottomOf="@id/input_session_name2"/>
+            app:layout_constraintTop_toBottomOf="@id/session_settings_input_name"/>
     <LinearLayout
             android:orientation="vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            app:layout_constraintTop_toBottomOf="@+id/text_module_select2"
+            app:layout_constraintTop_toBottomOf="@+id/session_settings_text_settings"
             android:layout_marginTop="32dp" app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
+            app:layout_constraintStart_toStartOf="parent" android:id="@+id/session_settings_list_settings">
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
@@ -40,7 +40,7 @@
             <TextView
                     android:text="Target score:"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:id="@+id/text_target"
+                    android:layout_height="wrap_content" android:id="@+id/session_settings_text_target"
                     android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:textSize="16sp"
             />
@@ -49,12 +49,12 @@
                     android:layout_height="wrap_content"
                     android:inputType="number"
                     android:ems="2"
-                    android:id="@+id/input_target"
+                    android:id="@+id/session_settings_input_target"
                     android:minHeight="48dp" android:minWidth="48dp"
                     android:maxLength="2"/>
         </LinearLayout>
         <CheckBox
-                android:id="@+id/checkbox_reset"
+                android:id="@+id/session_settings_checkbox_reset"
                 android:text="Reset after mistake"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -67,7 +67,7 @@
             <TextView
                     android:text="Point penalty for incorrect answer:"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:id="@+id/text_penalty"
+                    android:layout_height="wrap_content" android:id="@+id/session_settings_text_penalty"
                     android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:textSize="16sp"
             />
@@ -76,12 +76,12 @@
                     android:layout_height="wrap_content"
                     android:inputType="number"
                     android:ems="2"
-                    android:id="@+id/input_penalty"
+                    android:id="@+id/session_settings_input_penalty"
                     android:minWidth="48dp" android:minHeight="48dp"
                     android:maxLength="2"/>
         </LinearLayout>
         <CheckBox
-                android:id="@+id/checkbox_repeatable"
+                android:id="@+id/session_settings_checkbox_repeatable"
                 android:text="Can repeat answered question"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -90,7 +90,7 @@
     <Button
             android:text="Done"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:id="@+id/done_session_edit"
+            android:layout_height="wrap_content" android:id="@+id/session_settings_button_done"
             app:layout_constraintEnd_toEndOf="parent"
             android:textSize="24sp"
             app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="100dp"
@@ -98,9 +98,9 @@
     <Button
             android:text="Back"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:id="@+id/back_session_edit"
+            android:layout_height="wrap_content" android:id="@+id/session_settings_button_back"
             app:layout_constraintStart_toStartOf="parent"
             android:textSize="24sp"
             app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="100dp"
-            app:layout_constraintEnd_toStartOf="@+id/done_session_edit"/>
+            app:layout_constraintEnd_toStartOf="@+id/session_settings_button_done"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

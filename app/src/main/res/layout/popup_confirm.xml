@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                                   xmlns:app="http://schemas.android.com/apk/res-auto"
+                                                   xmlns:tools="http://schemas.android.com/tools"
+                                                   android:layout_width="wrap_content"
+                                                   android:layout_height="wrap_content"
+                                                   android:background="?attr/popupMenuBackground">
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/popup_confirm_text"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:text="Are you sure?" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:textSize="34sp" android:layout_margin="30dp"
+    />
+    <Button
+            android:text="yes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/popup_confirm_button_yes"
+            android:layout_margin="30dp"
+            app:layout_constraintTop_toBottomOf="@+id/popup_confirm_text"
+            app:layout_constraintStart_toStartOf="parent"/>
+    <Button
+            android:text="no"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/popup_confirm_button_no"
+            android:layout_margin="30dp"
+            app:layout_constraintTop_toBottomOf="@+id/popup_confirm_text"
+            app:layout_constraintEnd_toEndOf="parent"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,7 +3,6 @@ package com.example.trainerengine.modules
 import androidx.fragment.app.Fragment
 import com.example.trainerengine.configs.ModuleConfig
 import com.example.trainerengine.skills.Skill
-import com.example.trainerengine.skills.SkillSet
 
 enum class TaskState {
     AWAITING, LOCKED,
@@ -43,6 +42,8 @@ abstract class Module(
         }
         return taskFactory(this, questionFactory(question), answersList, taskID, config, attempts.lastOrNull())
     }
+
+    abstract fun getAllSkills(): MutableMap<String, String> // Map of skill name to skill description
 }
 
 abstract class ModuleTask(
@@ -192,7 +193,7 @@ abstract class TaskJudgment(protected val attempt: TaskAttempt, loadedJudgment: 
         return 0.0
     }
 
-    fun specificGrade(@Suppress("UNUSED_PARAMETER") skill: Skill): Double {
+    fun specificGrade(skill: Skill): Double {
         return 0.0
     }
 }
@@ -211,6 +212,4 @@ abstract class ModuleStub {
     abstract val moduleDirectory: String
 
     abstract fun createModule(moduleID: Int): Module
-
-    abstract fun getSkillSet(): SkillSet
 }

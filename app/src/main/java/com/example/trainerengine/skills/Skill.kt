@@ -2,7 +2,13 @@ package com.example.trainerengine.skills
 
 import com.example.trainerengine.database.Database
 
-class SkillSet(private val skillSetID: Int, private val moduleID: Int, private val database: Database, private val skills: MutableList<Skill> = mutableListOf()) {
+class SkillSet(
+    private val skillSetID: Int,
+    private val moduleID: Int,
+    private val sessionID: Int,
+    private val database: Database,
+    private val skills: MutableList<Skill> = mutableListOf()
+) {
     fun getSkillSetID(): Int {
         return skillSetID
     }
@@ -11,11 +17,15 @@ class SkillSet(private val skillSetID: Int, private val moduleID: Int, private v
         return moduleID
     }
 
+    fun getSessionID(): Int {
+        return sessionID
+    }
+
     fun getSkills(): MutableList<Skill> {
         return skills
     }
 
-    fun getSkill(name: String): Skill?{
+    fun getSkill(name: String): Skill? {
         for (skill in skills) {
             if (skill.getName() == name) {
                 return skill
@@ -26,6 +36,7 @@ class SkillSet(private val skillSetID: Int, private val moduleID: Int, private v
 
     fun addSkill(skill: Skill) {
         skills.add(skill)
+        database.updateSkillSet(this)
     }
 
     fun contains(skill: Skill): Boolean {
@@ -37,7 +48,15 @@ class SkillSet(private val skillSetID: Int, private val moduleID: Int, private v
     }
 }
 
-class Skill(private val skillID: Int, private val skillSetID: Int, private val name: String, private val description: String) {
+class Skill(
+    private val skillID: Int,
+    private val skillSetID: Int,
+    private val name: String,
+    private val description: String,
+    private var score: Float,
+    private var visibility: Boolean,
+    private val database: Database
+) {
     fun getSkillID(): Int {
         return skillID
     }
@@ -52,5 +71,23 @@ class Skill(private val skillID: Int, private val skillSetID: Int, private val n
 
     fun getDescription(): String {
         return description
+    }
+
+    fun getScore(): Float {
+        return score
+    }
+
+    fun setScore(score: Float) {
+        this.score = score
+        database.updateSkill(this)
+    }
+
+    fun getVisibility(): Boolean {
+        return visibility
+    }
+
+    fun setVisibility(visibility: Boolean) {
+        this.visibility = visibility
+        database.updateSkill(this)
     }
 }

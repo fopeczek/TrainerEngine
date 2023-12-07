@@ -106,4 +106,8 @@ class Session( //Here are the defaults for session creation
         }
         database.updateSession(this)
     }
+
+    fun remove(){
+        database.removeSession(sessionID)
+    }
 }

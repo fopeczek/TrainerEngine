@@ -6,7 +6,6 @@ import android.widget.Button
 import com.example.trainerengine.R
 import com.example.trainerengine.database.Database
 import com.example.trainerengine.database.QueryHelper
-import com.example.trainerengine.sessions.Session
 
 class ConfigEditor : AppCompatActivity() {
     private lateinit var database: Database
@@ -36,7 +35,7 @@ class ConfigEditor : AppCompatActivity() {
             }
         }
 
-        val done = findViewById<Button>(R.id.done_config_edit)
+        val done = findViewById<Button>(R.id.config_editor_button_done)
         done.setOnClickListener { onDone() }
     }
 

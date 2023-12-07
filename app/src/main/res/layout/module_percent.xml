@@ -10,25 +10,25 @@
         <TextView
                 android:text="50%"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:id="@+id/PercentQuestion"
+                android:layout_height="wrap_content" android:id="@+id/module_percent_text_question"
                 android:textAppearance="@style/TextAppearance.AppCompat.Large"
                 android:textSize="34sp" app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"/>
         <SeekBar
                 android:layout_width="286dp"
-                android:layout_height="35dp" android:id="@+id/PercentAnswer"
+                android:layout_height="35dp" android:id="@+id/module_percent_seekbar_answer"
                 app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toBottomOf="@+id/PercentQuestion"
+                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toBottomOf="@+id/module_percent_text_question"
                 android:max="100" android:progress="50"
                 app:layout_constraintVertical_bias="0.20999998"/>
         <TextView
                 android:text="50%"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:id="@+id/AnswerPreview"
-                app:layout_constraintTop_toBottomOf="@+id/PercentAnswer" android:layout_marginTop="8dp"
-                app:layout_constraintEnd_toEndOf="@+id/PercentAnswer"
-                app:layout_constraintStart_toStartOf="@+id/PercentAnswer"
+                android:layout_height="wrap_content" android:id="@+id/module_percent_text_preview"
+                app:layout_constraintTop_toBottomOf="@+id/module_percent_seekbar_answer" android:layout_marginTop="8dp"
+                app:layout_constraintEnd_toEndOf="@+id/module_percent_seekbar_answer"
+                app:layout_constraintStart_toStartOf="@+id/module_percent_seekbar_answer"
                 android:textAppearance="@style/TextAppearance.AppCompat.Large" android:textSize="20sp"
                 android:visibility="invisible" app:layout_constraintHorizontal_bias="0.62"/>
     </androidx.constraintlayout.widget.ConstraintLayout>

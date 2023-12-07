@@ -15,8 +15,8 @@ val CONFETTI_DRAWABLES = listOf(
     R.drawable.confetti2,
     R.drawable.confetti3
 )
-const val BOTTOM_RIGHT = R.id.confetti_bottom_right
-const val BOTTOM_LEFT = R.id.confetti_bottom_left
+const val BOTTOM_RIGHT = R.id.session_viewer_confetti_bottom_right
+const val BOTTOM_LEFT = R.id.session_viewer_confetti_bottom_left
 const val BOTTOM_LEFT_ANGLE_MIN = 270
 const val BOTTOM_LEFT_ANGLE_MAX = 310
 
